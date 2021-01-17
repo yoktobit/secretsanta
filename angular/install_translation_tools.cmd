@@ -1,0 +1,1 @@
+ng add @ngx-i18nsupport/tooling --i18nLocale=de --languages de,en

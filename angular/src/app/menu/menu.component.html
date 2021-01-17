@@ -1,0 +1,5 @@
+<div *ngIf="status?.loggedIn">
+    <a mat-button [routerLink]="''" i18n="@@menuStart"> Start </a>
+    <a mat-button [routerLink]="'/game'" i18n="@@menuGame"> Spiel </a>
+    <a mat-button *ngIf="status.role == 'Admin'" [routerLink]="'/players'" i18n="@@menuPlayers"> Spieler </a>
+</div>

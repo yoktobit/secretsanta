@@ -1,0 +1,13 @@
+@startuml Usecases
+
+Player -> (Register)
+(Register) -> (Create Game)
+(Create Game) --> (Add Players)
+(Add Players) --> (Wait For Ready)
+Player -> (Register Password) 
+(Register Password) -> (Wait For Ready)
+(Wait For Ready) --> (Draw)
+(Draw) --> (Show Draw Information)
+Player --> (Show Draw Information)
+
+@enduml

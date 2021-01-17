@@ -1,0 +1,26 @@
+<mat-card style="margin:1em; text-align: center;">
+    <h1 i18n="@@login">Anmelden</h1>
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" autocomplete="on">
+        <p>
+            <mat-form-field>
+                <mat-label i18n="@@gameCode">Code des Spiels</mat-label>
+                <input matInput name="code" formControlName="code" type="text" required="true" placeholder="ABCDEFGHIJKL" autocomplete="on">
+            </mat-form-field>
+        </p>
+        <p>
+            <mat-form-field>
+                <mat-label i18n="@@name">Name</mat-label>
+                <input matInput name="username" formControlName="username" placeholder="Musterio">
+            </mat-form-field>
+        </p>
+        <p>
+            <mat-form-field>
+                <mat-label i18n="@@yourPassword">Dein Passwort</mat-label>
+                <input matInput name="password" formControlName="password" type="password" required="true">
+            </mat-form-field>
+        </p>
+        <p>
+            <button mat-raised-button color="primary" i18n="@@login">Anmelden</button>
+        </p>
+    </form>
+</mat-card>

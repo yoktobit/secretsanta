@@ -1,0 +1,393 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+  <file source-language="de" datatype="plaintext" original="ng2.template">
+    <body>
+      <trans-unit id="2674772918269088688" datatype="html">
+        <source>Wichtel-Helfer</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/app.component.ts</context>
+          <context context-type="linenumber">15</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="Title" datatype="html">
+        <source>Wichtel-Helfer</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/app.component.html</context>
+          <context context-type="linenumber">3</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="resetWarningTitle" datatype="html">
+        <source>Spiel wirklich zurücksetzen?</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/confirm-reset-dialog/confirm-reset-dialog.component.html</context>
+          <context context-type="linenumber">1</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="resetWarningText" datatype="html">
+        <source>Wichtel, die ihr Geschenk bereits gekauft haben, könnten sich darüber ärgern.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/confirm-reset-dialog/confirm-reset-dialog.component.html</context>
+          <context context-type="linenumber">3</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="backButton" datatype="html">
+        <source>Zurück</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/confirm-reset-dialog/confirm-reset-dialog.component.html</context>
+          <context context-type="linenumber">6</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="confirmResetButton" datatype="html">
+        <source>Spiel zurücksetzen!</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/confirm-reset-dialog/confirm-reset-dialog.component.html</context>
+          <context context-type="linenumber">7</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="gameCreated" datatype="html">
+        <source>Spiel erstellt</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-created/game-created.component.html</context>
+          <context context-type="linenumber">2</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="gameCreatedDetail" datatype="html">
+        <source>Glückwunsch, dein Spiel wurde erfolgreich erstellt. Viel Spaß.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game-created/game-created.component.html</context>
+          <context context-type="linenumber">3</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1133378173705582866" datatype="html">
+        <source>Erstellt</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game/game.component.ts</context>
+          <context context-type="linenumber">94</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2279670706628452587" datatype="html">
+        <source>Warte auf alle Mitwichtel</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game/game.component.ts</context>
+          <context context-type="linenumber">96</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4021780720161198344" datatype="html">
+        <source>Warte auf Auslosung</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game/game.component.ts</context>
+          <context context-type="linenumber">98</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4294028751947390580" datatype="html">
+        <source>Ausgelost</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game/game.component.ts</context>
+          <context context-type="linenumber">100</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="575604127266104148" datatype="html">
+        <source>Unbekannt</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game/game.component.ts</context>
+          <context context-type="linenumber">102</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="alreadyLoggedInNotice" datatype="html">
+        <source>Du bist bereits in einem Spiel angemeldet. Möchtest Du dich abmelden?</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game/game.component.html</context>
+          <context context-type="linenumber">3</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="logout" datatype="html">
+        <source>Abmelden</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game/game.component.html</context>
+          <context context-type="linenumber">4</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="login" datatype="html">
+        <source>Anmelden</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game/game.component.html</context>
+          <context context-type="linenumber">9</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/login/login.component.html</context>
+          <context context-type="linenumber">2</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/login/login.component.html</context>
+          <context context-type="linenumber">23</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="giftedNotice" datatype="html">
+        <source>Du darfst <x id="INTERPOLATION" equiv-text="{{game.gifted}}"/> bewichteln.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game/game.component.html</context>
+          <context context-type="linenumber">15</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="startGame" datatype="html">
+        <source>Auslosung starten!</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game/game.component.html</context>
+          <context context-type="linenumber">16</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="resetGame" datatype="html">
+        <source>Ziehung rückgängig!</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/game/game.component.html</context>
+          <context context-type="linenumber">20</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="gameCode" datatype="html">
+        <source>Code des Spiels</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/login/login.component.html</context>
+          <context context-type="linenumber">6</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="name" datatype="html">
+        <source>Name</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/login/login.component.html</context>
+          <context context-type="linenumber">12</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="yourPassword" datatype="html">
+        <source>Dein Passwort</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/login/login.component.html</context>
+          <context context-type="linenumber">18</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1050893086796048093" datatype="html">
+        <source>Bereit</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/manage-players/manage-players.component.ts</context>
+          <context context-type="linenumber">97</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3036818380584249898" datatype="html">
+        <source>Registrierung steht aus</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/manage-players/manage-players.component.ts</context>
+          <context context-type="linenumber">99</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="shareNotice" datatype="html">
+        <source>Teile folgenden Code oder Link mit deinen Freunden</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/manage-players/manage-players.component.html</context>
+          <context context-type="linenumber">3</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="code" datatype="html">
+        <source>Code: <x id="INTERPOLATION" equiv-text="{{game?.code}}"/></source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/manage-players/manage-players.component.html</context>
+          <context context-type="linenumber">4</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="link" datatype="html">
+        <source>Link: <x id="INTERPOLATION" equiv-text="{{gameUrl()}}"/></source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/manage-players/manage-players.component.html</context>
+          <context context-type="linenumber">5</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="addPlayer" datatype="html">
+        <source>Spieler hinzufügen</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/manage-players/manage-players.component.html</context>
+          <context context-type="linenumber">10</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="playerName" datatype="html">
+        <source>Name</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/manage-players/manage-players.component.html</context>
+          <context context-type="linenumber">13</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="add" datatype="html">
+        <source>Hinzufügen</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/manage-players/manage-players.component.html</context>
+          <context context-type="linenumber">17</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="playerHeading" datatype="html">
+        <source>Spieler:</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/manage-players/manage-players.component.html</context>
+          <context context-type="linenumber">18</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="deleteButtonLabel" datatype="html">
+        <source>Löschen</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/manage-players/manage-players.component.html</context>
+          <context context-type="linenumber">48</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exceptionButtonLabel" datatype="html">
+        <source>Ausnahme</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/manage-players/manage-players.component.html</context>
+          <context context-type="linenumber">53</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exceptionHeading" datatype="html">
+        <source>Ausnahmen</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/manage-players/manage-players.component.html</context>
+          <context context-type="linenumber">62</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="nameColumn" datatype="html">
+        <source> Name </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/manage-players/manage-players.component.html</context>
+          <context context-type="linenumber">32</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="statusColumn" datatype="html">
+        <source> Status </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/manage-players/manage-players.component.html</context>
+          <context context-type="linenumber">36</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exceptionNameAColumn" datatype="html">
+        <source> Name </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/manage-players/manage-players.component.html</context>
+          <context context-type="linenumber">65</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exceptionDirectionColumn" datatype="html">
+        <source> Richtung </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/manage-players/manage-players.component.html</context>
+          <context context-type="linenumber">69</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="exceptionNameBColumn" datatype="html">
+        <source> Name </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/manage-players/manage-players.component.html</context>
+          <context context-type="linenumber">73</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="menuStart" datatype="html">
+        <source> Start </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/menu/menu.component.html</context>
+          <context context-type="linenumber">2</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="menuGame" datatype="html">
+        <source> Spiel </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/menu/menu.component.html</context>
+          <context context-type="linenumber">3</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="menuPlayers" datatype="html">
+        <source> Spieler </source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/menu/menu.component.html</context>
+          <context context-type="linenumber">4</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="newGameHeading" datatype="html">
+        <source>Neue Runde</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/new-game/new-game.component.html</context>
+          <context context-type="linenumber">2</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="gameTitle" datatype="html">
+        <source>Name des Spiels</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/new-game/new-game.component.html</context>
+          <context context-type="linenumber">7</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="gameTitlePlaceholder" datatype="html">
+        <source>Unsere Wichtelrunde</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/new-game/new-game.component.html</context>
+          <context context-type="linenumber">8</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="gameDescription" datatype="html">
+        <source>Zusätzlicher Text</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/new-game/new-game.component.html</context>
+          <context context-type="linenumber">13</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="gamePlaceholderDescription" datatype="html">
+        <source>Herzlich Willkommen in unserer Wichtelrunde</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/new-game/new-game.component.html</context>
+          <context context-type="linenumber">14</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="gameYourName" datatype="html">
+        <source>Dein Name</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/new-game/new-game.component.html</context>
+          <context context-type="linenumber">19</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="gameYourPassword" datatype="html">
+        <source>Dein Passwort</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/new-game/new-game.component.html</context>
+          <context context-type="linenumber">25</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="gameStartButton" datatype="html">
+        <source>Los gehts</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/new-game/new-game.component.html</context>
+          <context context-type="linenumber">30</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5514132733516920333" datatype="html">
+        <source>An anderem Spiel anmelden</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/welcome/welcome.component.ts</context>
+          <context context-type="linenumber">25</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="760511999048534328" datatype="html">
+        <source>An Spiel anmelden</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/welcome/welcome.component.ts</context>
+          <context context-type="linenumber">25</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="welcome" datatype="html">
+        <source>Herzlich Willkommen!</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/welcome/welcome.component.html</context>
+          <context context-type="linenumber">2</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="newGameButton" datatype="html">
+        <source>Neues Spiel</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/welcome/welcome.component.html</context>
+          <context context-type="linenumber">5</context>
+        </context-group>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

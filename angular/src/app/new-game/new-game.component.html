@@ -1,0 +1,32 @@
+<mat-card style="margin:1em; text-align: center;">
+    <h1 i18n="@@newGameHeading">Neue Runde</h1>
+    <form [formGroup]="newGameForm" (ngSubmit)="onSubmit()">
+        <p>
+            <mat-form-field>
+                <mat-label i18n="@@gameTitle">Name des Spiels</mat-label>
+                <input matInput name="title" formControlName="title" type="text" required="true" i18n-placeholder="@@gameTitlePlaceholder" placeholder="Unsere Wichtelrunde">
+            </mat-form-field>
+        </p>
+        <p>
+            <mat-form-field>
+                <mat-label i18n="@@gameDescription">Zusätzlicher Text</mat-label>
+                <textarea matInput name="description" formControlName="description" i18n="@@gamePlaceholderDescription">Herzlich Willkommen in unserer Wichtelrunde</textarea>
+            </mat-form-field>
+        </p>
+        <p>
+            <mat-form-field>
+                <mat-label i18n="@@gameYourName">Dein Name</mat-label>
+                <input matInput name="adminUser" formControlName="adminUser" type="text" required="true">
+            </mat-form-field>
+        </p>
+        <p>
+            <mat-form-field>
+                <mat-label i18n="@@gameYourPassword">Dein Passwort</mat-label>
+                <input matInput name="adminPassword" formControlName="adminPassword" type="password" required="true">
+            </mat-form-field>
+        </p>
+        <p>
+            <button mat-raised-button color="primary" i18n="@@gameStartButton">Los gehts</button>
+        </p>
+    </form>
+</mat-card>

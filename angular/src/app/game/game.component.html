@@ -1,0 +1,21 @@
+<p *ngIf="state == 'none'">Loading...</p>
+<mat-card *ngIf="state.endsWith('detailbasic')" style="margin:1em; text-align: center;">
+    <h3 i18n="@@alreadyLoggedInNotice">Du bist bereits in einem Spiel angemeldet. Möchtest Du dich abmelden?</h3>
+    <button mat-raised-button color="primary" (click)="logout()" i18n="@@logout">Abmelden</button>
+</mat-card>
+<mat-card *ngIf="state.endsWith('basic')" style="margin:1em; text-align: center;">
+    <h1>{{linkedGame.title}}</h1>
+    <h2>{{linkedGame.description}}</h2>
+    <button mat-raised-button color="primary" (click)="login()" i18n="@@login">Anmelden</button>
+</mat-card>
+<mat-card *ngIf="state.startsWith('detail')" style="margin:1em; text-align: center;">
+    <h1>{{game.title}}</h1>
+    <h2>{{game.description}}</h2>
+    <h3>Status: {{getStatusText()}}</h3>
+    <h3 *ngIf="game.status == 'Drawn'" i18n="@@giftedNotice">Du darfst {{game.gifted}} bewichteln.</h3>
+    <p><button *ngIf="state == 'detail' && game.status == 'Ready' && status.role == 'Admin'" mat-raised-button color="primary" (click)="startGame()" i18n="@@startGame">Auslosung starten!</button></p>
+    <p><button *ngIf="state == 'detail'" mat-raised-button color="primary" (click)="logout()">Abmelden</button></p>
+    <p></p>
+    <p></p>
+    <p><button *ngIf="state == 'detail' && game.status == 'Drawn' && status.role == 'Admin'" mat-raised-button color="warn" (click)="resetGame()" i18n="@@resetGame">Ziehung rückgängig!</button></p>
+</mat-card>

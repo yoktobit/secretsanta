@@ -1,0 +1,11 @@
+[%header, cols=8]
+|===
+| Service -> / IS Service
+| Register | Create Game | Add Player | Set Password | Wait for Ready | Draw | Show Information
+| Register |x||||||
+| Create Game ||x|||||
+| Add Player |||x||||
+| Set Password ||||x|||
+| Wait for Ready |||||x||
+| Draw ||||||x|
+| Show Information |||||||x

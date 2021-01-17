@@ -1,0 +1,81 @@
+<app-game-created *ngIf="created"></app-game-created>
+<mat-card style="margin:1em; text-align: center;">
+    <h3 i18n="@@shareNotice">Teile folgenden Code oder Link mit deinen Freunden</h3>
+    <h2 i18n="@@code">Code: {{game?.code}}</h2>
+    <h2 i18n="@@link">Link: {{gameUrl()}}</h2>
+</mat-card>
+<mat-card style="margin:1em; text-align: center;">
+    <div style="display:flex; flex-flow: row wrap; justify-content: center;">
+        <div style="flex: 1 1 50%;">
+            <h2 i18n="@@addPlayer">Spieler hinzufügen</h2>
+            <form #f="ngForm" (ngSubmit)="onSubmit(f)">
+                <mat-form-field>
+                    <mat-label i18n="@@playerName">Name</mat-label>
+                    <input name="name" matInput ngModel type="text" placeholder="Name" required="true">
+                </mat-form-field>
+                <span style="margin-left: 1em;"></span>
+                <button type="submit" [disabled]="!f.valid" mat-raised-button color="primary" i18n="@@add">Hinzufügen</button>
+                <h3 i18n="@@playerHeading">Spieler:</h3>
+                <div style="display:flex">
+                    <table width="100%" mat-table [dataSource]="players">
+                        <ng-container matColumnDef="select">
+                            <th mat-header-cell *matHeaderCellDef style="text-align: center !important;">
+                                <mat-checkbox (change)="$event ? masterToggle() : null" [checked]="selection.hasValue() && isAllSelected()" [indeterminate]="selection.hasValue() && !isAllSelected()">
+                                </mat-checkbox>
+                            </th>
+                            <td mat-cell *matCellDef="let row">
+                                <mat-checkbox (click)="$event.stopPropagation()" (change)="$event ? selection.toggle(row) : null" [checked]="selection.isSelected(row)">
+                                </mat-checkbox>
+                            </td>
+                        </ng-container>
+                        <ng-container matColumnDef="name">
+                            <th mat-header-cell *matHeaderCellDef style="text-align: center !important;" i18n="@@nameColumn"> Name </th>
+                            <td mat-cell *matCellDef="let player"> {{player.name}} </td>
+                        </ng-container>
+                        <ng-container matColumnDef="status">
+                            <th mat-header-cell *matHeaderCellDef style="text-align: center !important;" i18n="@@statusColumn"> Status </th>
+                            <td mat-cell *matCellDef="let player">
+                                <mat-icon *ngIf="player.status=='Ready'" style="color: lightgreen;">check_circle_filled</mat-icon>
+                                <mat-icon *ngIf="player.status==''" style="color: yellow;">hourglass_empty</mat-icon>
+                                <mat-icon *ngIf="player.status=='Cancelled'" style="color: red;">cancel</mat-icon>
+                            </td>
+                        </ng-container>
+                        <tr mat-header-row *matHeaderRowDef="displayedColumnsPlayerList"></tr>
+                        <tr mat-row *matRowDef="let row; columns: displayedColumnsPlayerList;"></tr>
+                    </table>
+                    <div style="display: flex; flex-flow: column; justify-content: center; margin-bottom: 5em;">
+                        <span>
+                            <button type="button" style="flex: 1 1 auto;margin-bottom: 1em;" mat-mini-fab color="primary" i18n-aria-label="@@deleteButtonLabel" aria-label="Löschen" (click)="deletePlayer()">
+                                <mat-icon>delete</mat-icon>
+                            </button>
+                        </span>
+                        <span>
+                            <button type="button" style="flex: 1 1 auto" mat-mini-fab color="primary" i18n-aria-label="@@exceptionButtonLabel" aria-label="Ausnahme" (click)="addException()">
+                                <mat-icon>group_add</mat-icon>
+                            </button>
+                        </span>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div style="flex: 1 1 50%;">
+            <h2 i18n="@@exceptionHeading">Ausnahmen</h2>
+            <table mat-table [dataSource]="exceptions" width="100%">
+                <ng-container matColumnDef="nameA">
+                    <th mat-header-cell *matHeaderCellDef style="text-align: center !important;" i18n="@@exceptionNameAColumn"> Name </th>
+                    <td mat-cell *matCellDef="let exception"> {{exception.nameA}} </td>
+                </ng-container>
+                <ng-container matColumnDef="direction">
+                    <th mat-header-cell *matHeaderCellDef style="text-align: center !important;" i18n="@@exceptionDirectionColumn"> Richtung </th>
+                    <td mat-cell *matCellDef="let exception"> &rarr; </td>
+                </ng-container>
+                <ng-container matColumnDef="nameB">
+                    <th mat-header-cell *matHeaderCellDef style="text-align: center !important;" i18n="@@exceptionNameBColumn"> Name </th>
+                    <td mat-cell *matCellDef="let exception"> {{exception.nameB}} </td>
+                </ng-container>
+                <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+            </table>
+        </div>
+    </div>
+</mat-card>
