@@ -1,0 +1,42 @@
+version: "3"
+
+services:
+  reverse-proxy:
+    build: 'reverse-proxy/'
+    restart: always
+    container_name: 'secretsanta_reverse_proxy'
+    image: secretsanta/reverse-proxy:latest
+    depends_on: ["webapp", "backend", "database"]
+    networks: [secretsanta]
+    ports: [8080:80]
+  webapp:
+    build: "angular/"
+    restart: always
+    container_name: secretsanta_webapp
+    image: secretsanta/webapp:latest
+    networks: [secretsanta]
+  backend:
+    build: "go/"
+    restart: always
+    container_name: secretsanta_backend
+    image: secretsanta/backend:latest
+    depends_on: [database]
+    environment:
+      PGSQL_CS: "host=database user=${DB_USER} password=${DB_PASS} dbname=${DB_NAME} port=5432"
+      ALLOWED_HOSTS: "http://localhost:8080"
+      COOKIE_SECRET: "${COOKIE_SECRET}"
+      GIN_MODE: "${GIN_MODE}"
+    networks: [secretsanta]
+  database:
+    image: postgres
+    restart: always
+    container_name: database
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+    ports: [5432:5432]
+    networks: [secretsanta]
+
+networks:
+  secretsanta:
+    driver: bridge
