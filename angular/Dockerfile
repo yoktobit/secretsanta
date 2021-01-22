@@ -5,7 +5,8 @@ WORKDIR /app
 COPY package.json /app/package.json
 RUN npm install
 COPY . /app
-RUN npm run build --prod
+RUN sed -i "s+\${REST_SERVICE_URL}+$REST_SERVICE_URL+g" /app/src/environments/environment.prod.ts
+RUN yarn build --configuration=production
 
 # 2. Deploy
 FROM nginx:latest

@@ -8,7 +8,7 @@ services:
     image: secretsanta/reverse-proxy:latest
     depends_on: ["webapp", "backend", "database"]
     networks: [secretsanta]
-    ports: [8080:80]
+    ports: [80:80]
   webapp:
     build: "angular/"
     restart: always
@@ -23,7 +23,7 @@ services:
     depends_on: [database]
     environment:
       PGSQL_CS: "host=database user=${DB_USER} password=${DB_PASS} dbname=${DB_NAME} port=5432"
-      ALLOWED_HOSTS: "http://localhost:8080"
+      ALLOWED_HOSTS: "${ALLOWED_HOSTS}"
       COOKIE_SECRET: "${COOKIE_SECRET}"
       GIN_MODE: "${GIN_MODE}"
     networks: [secretsanta]
@@ -34,7 +34,6 @@ services:
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASS}
-    ports: [5432:5432]
     networks: [secretsanta]
 
 networks:
