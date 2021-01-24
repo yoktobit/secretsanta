@@ -35,7 +35,12 @@ services:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASS}
     networks: [secretsanta]
+    volumes:
+      - database_data:/var/lib/postgresql/data
 
 networks:
   secretsanta:
     driver: bridge
+
+volumes:
+  database_data:
