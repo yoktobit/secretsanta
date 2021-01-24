@@ -18,7 +18,7 @@ func ConnectDataBase() {
 	dsn := os.Getenv("PGSQL_CS")
 	log.Infoln("Connecting to " + dsn)
 	if dsn == "" {
-		dsn = "user=santa password=santa dbname=santa port=5432"
+		dsn = "user=santa password=santa dbname=secretsanta port=5432"
 	}
 	database, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 

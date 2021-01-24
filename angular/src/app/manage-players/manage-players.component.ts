@@ -138,4 +138,12 @@ export class ManagePlayersComponent implements OnInit {
       this.exceptions = exceptions;
     });
   }
+
+  share() {
+    navigator.share({
+      title: this.game.name,
+      text: this.game.description,
+      url: this.gameUrl()
+    });
+  }
 }

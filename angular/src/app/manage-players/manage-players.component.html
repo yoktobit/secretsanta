@@ -2,7 +2,11 @@
 <mat-card style="margin:1em; text-align: center;">
     <h3 i18n="@@shareNotice">Teile folgenden Code oder Link mit deinen Freunden</h3>
     <h2 i18n="@@code">Code: {{game?.code}}</h2>
-    <h2 i18n="@@link">Link: {{gameUrl()}}</h2>
+    <h2 i18n="@@link">Link: {{gameUrl()}}
+        <button mat-icon-button i18n-aria-label="@@shareTooltip" aria-label="Teilen" (click)="share()">
+            <mat-icon>open_in_new</mat-icon>
+        </button>
+    </h2>
 </mat-card>
 <mat-card style="margin:1em; text-align: center;">
     <div style="display:flex; flex-flow: row wrap; justify-content: center;">

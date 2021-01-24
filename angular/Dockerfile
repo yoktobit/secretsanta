@@ -1,11 +1,12 @@
 # 1. Build
-FROM node:lts AS build
+FROM node:lts-alpine AS build
 WORKDIR /app
 
 COPY package.json /app/package.json
-RUN npm install
+RUN yarn install
 COPY . /app
-RUN sed -i "s+\${REST_SERVICE_URL}+$REST_SERVICE_URL+g" /app/src/environments/environment.prod.ts
+ENV PRODENV=/app/src/environments/environment.prod.ts
+RUN yarn run envsub $PRODENV $PRODENV
 RUN yarn build --configuration=production
 
 # 2. Deploy

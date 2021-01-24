@@ -1,8 +1,9 @@
 package rest
 
 import (
-	"log"
 	"net/http"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
@@ -14,13 +15,18 @@ import (
 func DefineRoutes(r *gin.RouterGroup) {
 
 	r.POST("/createNewGame", func(c *gin.Context) {
+		log.Infoln("createNewGame")
 		session := sessions.Default(c)
+		log.Infoln("Session ermittelt")
 		var createGameTo to.CreateGameTo
 		c.BindJSON(&createGameTo)
 		createGameResponseTo := logic.CreateNewGame(createGameTo)
+		log.Infoln("Spiel erstellt")
+		session.Clear()
 		session.Set("gameCode", createGameResponseTo.Code)
 		session.Set("player", createGameTo.AdminUser)
 		session.Save()
+		log.Infoln("Session gespeichert")
 		c.JSON(http.StatusOK, createGameResponseTo)
 	})
 	r.POST("/addPlayer", func(c *gin.Context) {
@@ -54,8 +60,8 @@ func DefineRoutes(r *gin.RouterGroup) {
 		c.BindJSON(&loginPlayerPasswordTo)
 		loginPlayerResponseTo := logic.LoginPlayer(loginPlayerPasswordTo)
 		if loginPlayerResponseTo.Ok {
-			log.Println("Alles ok")
-			log.Println(loginPlayerPasswordTo.GameCode)
+			log.Infoln("Alles ok")
+			log.Infoln(loginPlayerPasswordTo.GameCode)
 			session.Set("gameCode", loginPlayerPasswordTo.GameCode)
 			session.Set("player", loginPlayerPasswordTo.Name)
 		} else {

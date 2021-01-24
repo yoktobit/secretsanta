@@ -9,7 +9,8 @@
         "lint": "ng lint",
         "e2e": "ng e2e",
         "extract-i18n": "ng extract-i18n --format xlf --output-path ./src/i18n && ng run secretsantang:xliffmerge",
-        "start-en": "ng serve --configuration=en"
+        "start-en": "ng serve --configuration=en",
+        "envsub": "envsub"
     },
     "private": true,
     "dependencies": {
@@ -41,6 +42,7 @@
         "@types/jasmine": "~3.6.0",
         "@types/node": "^12.11.1",
         "codelyzer": "^6.0.0",
+        "envsub": "^4.0.7",
         "jasmine-core": "~3.6.0",
         "jasmine-spec-reporter": "~5.0.0",
         "karma": "~5.1.0",
