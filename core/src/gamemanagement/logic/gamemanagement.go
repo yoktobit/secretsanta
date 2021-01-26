@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/lithammer/shortuuid"
-	"github.com/yoktobit/secretsanta/gamemanagement/dataaccess"
-	"github.com/yoktobit/secretsanta/gamemanagement/logic/to"
+	"github.com/yoktobit/secretsanta/core/gamemanagement/dataaccess"
+	"github.com/yoktobit/secretsanta/core/gamemanagement/logic/to"
 	"golang.org/x/crypto/bcrypt"
 
 	log "github.com/sirupsen/logrus"

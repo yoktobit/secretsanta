@@ -1,4 +1,4 @@
-module github.com/yoktobit/secretsanta
+module github.com/yoktobit/secretsanta/core
 
 go 1.14
 

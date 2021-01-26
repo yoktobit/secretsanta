@@ -1,7 +1,7 @@
 package dataaccess
 
 import (
-	"github.com/yoktobit/secretsanta/general/dataaccess"
+	"github.com/yoktobit/secretsanta/core/general/dataaccess"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
