@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { BackendService } from './../backend.service';
-import { CreateGameTo } from './../shared/models/creategameto';
+import { CreateGameTo } from './../shared/models/create-game-to.model';
 
 @Component({
   selector: 'app-new-game',

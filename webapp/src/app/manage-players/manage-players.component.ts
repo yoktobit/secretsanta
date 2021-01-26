@@ -3,12 +3,12 @@ import { HttpClient } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
 import { NgForm } from '@angular/forms';
 import { Router } from '@angular/router';
-import { AddRemovePlayerTo } from '../shared/models/addremoveplayerto';
+import { AddRemovePlayerTo } from '../shared/models/add-remove-player-to.model';
 import { BackendService } from './../backend.service';
-import { AddExceptionTo } from './../shared/models/addexceptionto';
+import { AddExceptionTo } from './../shared/models/add-exception-to.model';
 import { Exception } from './../shared/models/exception.model';
 import { Player } from './../shared/models/player.model';
-import { StatusResultTo } from './../shared/models/statusresultto';
+import { StatusResultTo } from './../shared/models/status-result-to.model';
 import { StatusService } from './../status.service';
 
 @Component({

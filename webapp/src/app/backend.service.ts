@@ -2,16 +2,16 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from './../environments/environment';
-import { AddExceptionTo } from './shared/models/addexceptionto';
-import { AddRemovePlayerTo } from './shared/models/addremoveplayerto';
-import { CreateGameResponseTo } from './shared/models/creategameresponseto';
-import { CreateGameTo } from './shared/models/creategameto';
-import { DrawGameResultTo } from './shared/models/draw-game-result-to';
+import { AddExceptionTo } from './shared/models/add-exception-to.model';
+import { AddRemovePlayerTo } from './shared/models/add-remove-player-to.model';
+import { CreateGameResponseTo } from './shared/models/create-game-response-to.model';
+import { CreateGameTo } from './shared/models/create-game-to.model';
+import { DrawGameResultTo } from './shared/models/draw-game-result-to.model';
 import { Exception } from './shared/models/exception.model';
-import { LoginResponseTo } from './shared/models/login-response-to';
-import { LoginTo } from './shared/models/loginto';
+import { LoginResponseTo } from './shared/models/login-response-to.model';
+import { LoginTo } from './shared/models/login-to.model';
 import { Player } from './shared/models/player.model';
-import { StatusResultTo } from './shared/models/statusresultto';
+import { StatusResultTo } from './shared/models/status-result-to.model';
 
 @Injectable({
   providedIn: 'root'

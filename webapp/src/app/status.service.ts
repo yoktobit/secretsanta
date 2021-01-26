@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { BackendService } from './backend.service';
-import { StatusResultTo } from './shared/models/statusresultto';
+import { StatusResultTo } from './shared/models/status-result-to.model';
 
 @Injectable({
   providedIn: 'root'

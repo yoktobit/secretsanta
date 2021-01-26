@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { StatusResultTo } from './../shared/models/statusresultto';
+import { StatusResultTo } from './../shared/models/status-result-to.model';
 import { StatusService } from './../status.service';
 
 @Component({

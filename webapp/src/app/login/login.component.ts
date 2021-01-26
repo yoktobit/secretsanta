@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { BackendService } from './../backend.service';
-import { LoginTo } from './../shared/models/loginto';
+import { LoginTo } from './../shared/models/login-to.model';
 import { StatusService } from './../status.service';
 
 @Component({

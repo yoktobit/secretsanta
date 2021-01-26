@@ -3,7 +3,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
 import { BackendService } from './../backend.service';
 import { ConfirmResetDialogComponent } from './../confirm-reset-dialog/confirm-reset-dialog.component';
-import { StatusResultTo } from './../shared/models/statusresultto';
+import { StatusResultTo } from './../shared/models/status-result-to.model';
 import { StatusService } from './../status.service';
 
 @Component({
