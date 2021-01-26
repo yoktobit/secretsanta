@@ -9,8 +9,8 @@ import (
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
-	"github.com/yoktobit/secretsanta/dataaccess"
-	"github.com/yoktobit/secretsanta/service/rest"
+	"github.com/yoktobit/secretsanta/gamemanagement/service/rest"
+	"github.com/yoktobit/secretsanta/general/dataaccess"
 )
 
 func main() {

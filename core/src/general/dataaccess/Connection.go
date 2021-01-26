@@ -26,9 +26,5 @@ func ConnectDataBase() {
 		panic("Failed to connect to database!")
 	}
 
-	database.AutoMigrate(&Game{})
-	database.AutoMigrate(&Player{})
-	database.AutoMigrate(&PlayerException{})
-
 	DB = database
 }
