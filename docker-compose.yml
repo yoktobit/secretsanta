@@ -10,13 +10,13 @@ services:
     networks: [secretsanta]
     ports: [80:80]
   webapp:
-    build: "angular/"
+    build: "webapp/"
     restart: always
     container_name: secretsanta_webapp
     image: secretsanta/webapp:latest
     networks: [secretsanta]
   backend:
-    build: "go/"
+    build: "core/"
     restart: always
     container_name: secretsanta_backend
     image: secretsanta/backend:latest
