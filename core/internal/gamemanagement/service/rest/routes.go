@@ -7,8 +7,8 @@ import (
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
-	logic "github.com/yoktobit/secretsanta/core/gamemanagement/logic"
-	to "github.com/yoktobit/secretsanta/core/gamemanagement/logic/to"
+	logic "github.com/yoktobit/secretsanta/internal/gamemanagement/logic"
+	to "github.com/yoktobit/secretsanta/internal/gamemanagement/logic/to"
 )
 
 // DefineRoutes defines the routes
