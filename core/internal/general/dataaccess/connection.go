@@ -1,4 +1,4 @@
-package dataaccess
+package dataaccess // import github.com/yoktobit/secretsanta/internal/general/dataacces
 
 import (
 	"os"
