@@ -30,7 +30,7 @@ services:
   database:
     image: postgres
     restart: always
-    container_name: database
+    container_name: secretsanta_database
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASS}
