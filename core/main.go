@@ -9,8 +9,10 @@ import (
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
-	"github.com/yoktobit/secretsanta/internal/gamemanagement/service/rest"
-	"github.com/yoktobit/secretsanta/internal/general/dataaccess"
+	gamemanagement_dataaccess "github.com/yoktobit/secretsanta/internal/gamemanagement/dataaccess"
+	"github.com/yoktobit/secretsanta/internal/gamemanagement/logic"
+	rest "github.com/yoktobit/secretsanta/internal/gamemanagement/service"
+	general_dataaccess "github.com/yoktobit/secretsanta/internal/general/dataaccess"
 )
 
 func main() {
@@ -26,8 +28,10 @@ func main() {
 	}))
 	store := cookie.NewStore([]byte(os.Getenv("COOKIE_SECRET")))
 	r.Use(sessions.Sessions("mysession", store))
-	dataaccess.ConnectDataBase()
+	connection := general_dataaccess.NewConnection()
+	gameRepository := gamemanagement_dataaccess.NewGameRepository(connection)
+	gamemanagement := logic.NewGamemanagement(gameRepository)
 	group := r.Group("/api")
-	rest.DefineRoutes(group)
+	rest.NewRestService(gamemanagement).DefineRoutes(group)
 	r.Run()
 }

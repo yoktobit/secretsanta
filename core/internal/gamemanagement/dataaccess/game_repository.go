@@ -6,110 +6,139 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-// MigrateDb migrates the DB to the current schema version
-func MigrateDb(database *gorm.DB) {
+// GameRepository holds all the database access functions
+type GameRepository interface {
+	MigrateDb(database *gorm.DB)
+	CreateGame(game *Game)
+	CreatePlayer(player *Player)
+	CreatePlayerException(playerException *PlayerException)
+	GetGameByCode(code string) (Game, error)
+	UpdateGame(game *Game)
+	UpdatePlayer(player *Player)
+	GetPlayerByNameAndGameID(name string, gameID uint) (Player, error)
+	GetExceptionByIds(playerAId uint, playerBId uint, gameID uint) (PlayerException, error)
+	GetPlayerWithAssociationsByNameAndGameID(playerName string, gameID uint) Player
+	GetPlayersByGameID(gameID uint) []*Player
+	GetExceptionsWithAssociationsByGameID(gameID uint) []*PlayerException
+	GetFirstUnreadyPlayerByGameID(gameID uint) (Player, error)
+	DeleteExceptionByPlayerID(playerID uint)
+	DeletePlayerByNameAndGameID(playerName string, gameID uint)
+}
 
-	database.AutoMigrate(&Game{})
-	database.AutoMigrate(&Player{})
-	database.AutoMigrate(&PlayerException{})
+type gameRepository struct {
+	connection dataaccess.Connection
+}
+
+// NewGameRepository is the factory method for creating a game repository
+func NewGameRepository(connection dataaccess.Connection) GameRepository {
+
+	return &gameRepository{connection: connection}
+}
+
+// MigrateDb migrates the DB to the current schema version
+func (gameRepository *gameRepository) MigrateDb(database *gorm.DB) {
+
+	gameRepository.connection.Connection().AutoMigrate(&Game{})
+	gameRepository.connection.Connection().AutoMigrate(&Player{})
+	gameRepository.connection.Connection().AutoMigrate(&PlayerException{})
 }
 
 // CreateGame creates a game
-func CreateGame(game *Game) {
+func (gameRepository *gameRepository) CreateGame(game *Game) {
 
-	dataaccess.DB.Create(game)
+	gameRepository.connection.Connection().Create(game)
 }
 
 // CreatePlayer creates a player
-func CreatePlayer(player *Player) {
+func (gameRepository *gameRepository) CreatePlayer(player *Player) {
 
-	dataaccess.DB.Create(player)
+	gameRepository.connection.Connection().Create(player)
 }
 
 // CreatePlayerException creates an Exception
-func CreatePlayerException(playerException *PlayerException) {
+func (gameRepository *gameRepository) CreatePlayerException(playerException *PlayerException) {
 
-	dataaccess.DB.Create(playerException)
+	gameRepository.connection.Connection().Create(playerException)
 }
 
 // GetGameByCode receives a game by code
-func GetGameByCode(code string) (Game, error) {
+func (gameRepository *gameRepository) GetGameByCode(code string) (Game, error) {
 
 	var game Game
-	result := dataaccess.DB.First(&game, "code = ?", code)
+	result := gameRepository.connection.Connection().First(&game, "code = ?", code)
 	return game, result.Error
 }
 
 // UpdateGame updates a game
-func UpdateGame(game *Game) {
+func (gameRepository *gameRepository) UpdateGame(game *Game) {
 
-	dataaccess.DB.Save(game)
+	gameRepository.connection.Connection().Save(game)
 }
 
 // UpdatePlayer updates a player
-func UpdatePlayer(player *Player) {
+func (gameRepository *gameRepository) UpdatePlayer(player *Player) {
 
-	dataaccess.DB.Save(player)
+	gameRepository.connection.Connection().Save(player)
 }
 
 // GetPlayerByNameAndGameID Get Player by name and game id
-func GetPlayerByNameAndGameID(name string, gameID uint) (Player, error) {
+func (gameRepository *gameRepository) GetPlayerByNameAndGameID(name string, gameID uint) (Player, error) {
 
 	var player Player
-	result := dataaccess.DB.First(&player, "name = ? AND game_id = ?", name, gameID)
+	result := gameRepository.connection.Connection().First(&player, "name = ? AND game_id = ?", name, gameID)
 	return player, result.Error
 }
 
 // GetExceptionByIds receives an exception by player ids and game id
-func GetExceptionByIds(playerAId uint, playerBId uint, gameID uint) (PlayerException, error) {
+func (gameRepository *gameRepository) GetExceptionByIds(playerAId uint, playerBId uint, gameID uint) (PlayerException, error) {
 
 	var existingException PlayerException
-	result := dataaccess.DB.First(&existingException, "player_a_id = ? AND player_b_id = ? AND game_id = ?", playerAId, playerBId, gameID)
+	result := gameRepository.connection.Connection().First(&existingException, "player_a_id = ? AND player_b_id = ? AND game_id = ?", playerAId, playerBId, gameID)
 	return existingException, result.Error
 }
 
 // GetPlayerWithAssociationsByNameAndGameID Get a Player By Name and Game ID including Associations
-func GetPlayerWithAssociationsByNameAndGameID(playerName string, gameID uint) Player {
+func (gameRepository *gameRepository) GetPlayerWithAssociationsByNameAndGameID(playerName string, gameID uint) Player {
 
 	var player Player
-	dataaccess.DB.Preload(clause.Associations).First(&player, "name = ? AND game_id = ?", playerName, gameID)
+	gameRepository.connection.Connection().Preload(clause.Associations).First(&player, "name = ? AND game_id = ?", playerName, gameID)
 	return player
 }
 
 // GetPlayersByGameID Get all Players by Game ID
-func GetPlayersByGameID(gameID uint) []*Player {
+func (gameRepository *gameRepository) GetPlayersByGameID(gameID uint) []*Player {
 
 	var players []*Player
-	dataaccess.DB.Where("game_id = ?", gameID).Find(&players)
+	gameRepository.connection.Connection().Where("game_id = ?", gameID).Find(&players)
 	return players
 }
 
 // GetExceptionsWithAssociationsByGameID Get existing Exceptions by Game ID including Associations
-func GetExceptionsWithAssociationsByGameID(gameID uint) []*PlayerException {
+func (gameRepository *gameRepository) GetExceptionsWithAssociationsByGameID(gameID uint) []*PlayerException {
 
 	var playerExceptions []*PlayerException
-	dataaccess.DB.Where("game_id = ?", gameID).Preload(clause.Associations).Find(&playerExceptions)
+	gameRepository.connection.Connection().Where("game_id = ?", gameID).Preload(clause.Associations).Find(&playerExceptions)
 	return playerExceptions
 }
 
 // GetFirstUnreadyPlayerByGameID Get the first unready Player for a GameId
-func GetFirstUnreadyPlayerByGameID(gameID uint) (Player, error) {
+func (gameRepository *gameRepository) GetFirstUnreadyPlayerByGameID(gameID uint) (Player, error) {
 
 	var otherPlayer Player
-	result := dataaccess.DB.First(&otherPlayer, "game_id = ? AND status != ?", gameID, Ready.String())
+	result := gameRepository.connection.Connection().First(&otherPlayer, "game_id = ? AND status != ?", gameID, Ready.String())
 	return otherPlayer, result.Error
 }
 
 // DeleteExceptionByPlayerID deletes the game by the IDs of Player A and Player B
-func DeleteExceptionByPlayerID(playerID uint) {
+func (gameRepository *gameRepository) DeleteExceptionByPlayerID(playerID uint) {
 
 	var exception PlayerException
-	dataaccess.DB.Delete(&exception, "player_a_id = ? OR player_b_id = ?", playerID, playerID)
+	gameRepository.connection.Connection().Delete(&exception, "player_a_id = ? OR player_b_id = ?", playerID, playerID)
 }
 
 // DeletePlayerByNameAndGameID deletes a player by name and game ID
-func DeletePlayerByNameAndGameID(playerName string, gameID uint) {
+func (gameRepository *gameRepository) DeletePlayerByNameAndGameID(playerName string, gameID uint) {
 
 	var player Player
-	dataaccess.DB.Delete(&player, "name = ? AND game_id = ?", playerName, gameID)
+	gameRepository.connection.Connection().Delete(&player, "name = ? AND game_id = ?", playerName, gameID)
 }

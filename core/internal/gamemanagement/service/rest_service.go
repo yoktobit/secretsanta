@@ -1,4 +1,4 @@
-package rest
+package service
 
 import (
 	"net/http"
@@ -11,8 +11,22 @@ import (
 	to "github.com/yoktobit/secretsanta/internal/gamemanagement/logic/to"
 )
 
+// RestService is for defining the REST interface of the app
+type RestService interface {
+	DefineRoutes(r *gin.RouterGroup)
+}
+
+type restService struct {
+	gamemanagement logic.Gamemanagement
+}
+
+// NewRestService is the factory method for creating the service
+func NewRestService(gamemanagement logic.Gamemanagement) RestService {
+	return &restService{gamemanagement: gamemanagement}
+}
+
 // DefineRoutes defines the routes
-func DefineRoutes(r *gin.RouterGroup) {
+func (restService *restService) DefineRoutes(r *gin.RouterGroup) {
 
 	r.POST("/createNewGame", func(c *gin.Context) {
 		log.Infoln("createNewGame")
@@ -20,7 +34,7 @@ func DefineRoutes(r *gin.RouterGroup) {
 		log.Infoln("Session ermittelt")
 		var createGameTo to.CreateGameTo
 		c.BindJSON(&createGameTo)
-		createGameResponseTo := logic.CreateNewGame(createGameTo)
+		createGameResponseTo := restService.gamemanagement.CreateNewGame(createGameTo)
 		log.Infoln("Spiel erstellt")
 		session.Clear()
 		session.Set("gameCode", createGameResponseTo.Code)
@@ -34,7 +48,7 @@ func DefineRoutes(r *gin.RouterGroup) {
 		var addPlayerTo to.AddRemovePlayerTo
 		c.BindJSON(&addPlayerTo)
 		addPlayerTo.GameCode = session.Get("gameCode").(string)
-		logic.AddPlayerToGame(addPlayerTo)
+		restService.gamemanagement.AddPlayerToGame(addPlayerTo)
 		c.Status(http.StatusOK)
 	})
 	r.POST("/removePlayer", func(c *gin.Context) {
@@ -42,7 +56,7 @@ func DefineRoutes(r *gin.RouterGroup) {
 		var removePlayerTo to.AddRemovePlayerTo
 		c.BindJSON(&removePlayerTo)
 		removePlayerTo.GameCode = session.Get("gameCode").(string)
-		logic.RemovePlayerFromGame(removePlayerTo)
+		restService.gamemanagement.RemovePlayerFromGame(removePlayerTo)
 		c.Status(http.StatusOK)
 	})
 
@@ -51,14 +65,14 @@ func DefineRoutes(r *gin.RouterGroup) {
 		var registerPlayerPasswordTo to.RegisterLoginPlayerPasswordTo
 		c.BindJSON(&registerPlayerPasswordTo)
 		registerPlayerPasswordTo.GameCode = session.Get("gameCode").(string)
-		logic.RegisterPlayerPassword(registerPlayerPasswordTo)
+		restService.gamemanagement.RegisterPlayerPassword(registerPlayerPasswordTo)
 		c.Status(http.StatusOK)
 	})
 	r.POST("/loginPlayer", func(c *gin.Context) {
 		session := sessions.Default(c)
 		var loginPlayerPasswordTo to.RegisterLoginPlayerPasswordTo
 		c.BindJSON(&loginPlayerPasswordTo)
-		loginPlayerResponseTo := logic.LoginPlayer(loginPlayerPasswordTo)
+		loginPlayerResponseTo := restService.gamemanagement.LoginPlayer(loginPlayerPasswordTo)
 		if loginPlayerResponseTo.Ok {
 			log.Infoln("Alles ok")
 			log.Infoln(loginPlayerPasswordTo.GameCode)
@@ -80,7 +94,7 @@ func DefineRoutes(r *gin.RouterGroup) {
 		var addExceptionTo to.AddExceptionTo
 		c.BindJSON(&addExceptionTo)
 		addExceptionTo.GameCode = gameCode.(string)
-		logic.AddException(addExceptionTo)
+		restService.gamemanagement.AddException(addExceptionTo)
 		c.Status(http.StatusOK)
 	})
 	r.GET("/draw", func(c *gin.Context) {
@@ -91,7 +105,7 @@ func DefineRoutes(r *gin.RouterGroup) {
 			return
 		}
 		drawGameTo := to.DrawGameTo{GameCode: gameCode.(string)}
-		drawGameResponseTo := logic.DrawGame(drawGameTo)
+		drawGameResponseTo := restService.gamemanagement.DrawGame(drawGameTo)
 		c.JSON(http.StatusOK, drawGameResponseTo)
 	})
 	r.GET("/reset", func(c *gin.Context) {
@@ -101,12 +115,12 @@ func DefineRoutes(r *gin.RouterGroup) {
 			c.Status(http.StatusForbidden)
 			return
 		}
-		logic.ResetGame(gameCode.(string))
+		restService.gamemanagement.ResetGame(gameCode.(string))
 		c.Status(http.StatusOK)
 	})
 	r.GET("/game/:gameCode", func(c *gin.Context) {
 		gameCode := c.Param("gameCode")
-		gameResultTo := logic.GetBasicGameByCode(gameCode)
+		gameResultTo := restService.gamemanagement.GetBasicGameByCode(gameCode)
 		c.JSON(http.StatusOK, gameResultTo)
 	})
 	r.GET("/game", func(c *gin.Context) {
@@ -122,7 +136,7 @@ func DefineRoutes(r *gin.RouterGroup) {
 			c.Status(http.StatusForbidden)
 			return
 		}
-		gameResultTo := logic.GetFullGameByCode(gameCode.(string), player.(string))
+		gameResultTo := restService.gamemanagement.GetFullGameByCode(gameCode.(string), player.(string))
 		c.JSON(http.StatusOK, gameResultTo)
 	})
 	r.GET("/players", func(c *gin.Context) {
@@ -132,7 +146,7 @@ func DefineRoutes(r *gin.RouterGroup) {
 			c.Status(http.StatusForbidden)
 			return
 		}
-		playerResultTos := logic.GetPlayersByCode(gameCode.(string))
+		playerResultTos := restService.gamemanagement.GetPlayersByCode(gameCode.(string))
 		c.JSON(http.StatusOK, playerResultTos)
 	})
 	r.GET("/exceptions", func(c *gin.Context) {
@@ -142,7 +156,7 @@ func DefineRoutes(r *gin.RouterGroup) {
 			c.Status(http.StatusForbidden)
 			return
 		}
-		exceptionResponseTos := logic.GetExceptionsByCode(gameCode.(string))
+		exceptionResponseTos := restService.gamemanagement.GetExceptionsByCode(gameCode.(string))
 		c.JSON(http.StatusOK, exceptionResponseTos)
 	})
 	r.GET("/logout", func(c *gin.Context) {
@@ -165,7 +179,7 @@ func DefineRoutes(r *gin.RouterGroup) {
 			result.GameCode = gameCode.(string)
 		}
 		if player != nil && gameCode != nil {
-			result.Role = logic.GetPlayerRoleByCodeAndName(gameCode.(string), player.(string))
+			result.Role = restService.gamemanagement.GetPlayerRoleByCodeAndName(gameCode.(string), player.(string))
 		}
 		c.JSON(http.StatusOK, result)
 	})

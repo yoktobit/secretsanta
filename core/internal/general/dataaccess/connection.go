@@ -9,11 +9,17 @@ import (
 	"gorm.io/gorm"
 )
 
-// DB is the static Database instance
-var DB *gorm.DB
+// Connection encapsulates some DB connection
+type Connection interface {
+	Connection() *gorm.DB
+}
 
-// ConnectDataBase connects the database
-func ConnectDataBase() {
+type connection struct {
+	db *gorm.DB
+}
+
+// NewConnection connects the database
+func NewConnection() Connection {
 
 	dsn := os.Getenv("PGSQL_CS")
 	log.Infoln("Connecting to " + dsn)
@@ -26,5 +32,11 @@ func ConnectDataBase() {
 		panic("Failed to connect to database!")
 	}
 
-	DB = database
+	return &connection{db: database}
+}
+
+// Connection gets the Gorm-Connection from the Connection object
+func (connection *connection) Connection() *gorm.DB {
+
+	return connection.db
 }
