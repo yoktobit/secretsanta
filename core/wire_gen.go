@@ -16,7 +16,7 @@ import (
 
 // InitializeEvent wires together the dependencies
 func InitializeEvent() service.RestService {
-	connection := dataaccess.NewConnection()
+	connection := dataaccess.NewConnectionWithEnvironment()
 	gameRepository := dataaccess2.NewGameRepository(connection)
 	gamemanagement := logic.NewGamemanagement(gameRepository)
 	restService := service.NewRestService(gamemanagement)

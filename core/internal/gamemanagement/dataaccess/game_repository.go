@@ -47,6 +47,7 @@ func (gameRepository *gameRepository) MigrateDb(database *gorm.DB) {
 func (gameRepository *gameRepository) CreateGame(game *Game) {
 
 	gameRepository.connection.Connection().Create(game)
+	gameRepository.connection.Connection().Commit()
 }
 
 // CreatePlayer creates a player
