@@ -12,7 +12,7 @@ var _ = Describe("Repository", func() {
 	var repository da.GameRepository
 
 	BeforeEach(func() {
-		connection := gda.NewConnectionWithParameters(config.User, config.Password, config.DB, config.Host, config.Port)
+		connection := gda.NewConnectionWithConfig(config)
 		repository = da.NewGameRepository(connection)
 		repository.MigrateDb(connection.Connection())
 	})
