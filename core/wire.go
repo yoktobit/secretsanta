@@ -12,6 +12,6 @@ import (
 
 // InitializeEvent wires together the dependencies
 func InitializeEvent() service.RestService {
-	wire.Build(service.NewRestService, logic.NewGamemanagement, dataaccess.NewGameRepository, dataaccess_general.NewConnectionWithEnvironment)
+	wire.Build(service.NewRestService, logic.NewGamemanagement, dataaccess.NewPlayerExceptionRepository, dataaccess.NewPlayerRepository, dataaccess.NewGameRepository, dataaccess_general.NewConnectionWithEnvironment)
 	return service.NewRestService(nil)
 }

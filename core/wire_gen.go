@@ -18,7 +18,9 @@ import (
 func InitializeEvent() service.RestService {
 	connection := dataaccess.NewConnectionWithEnvironment()
 	gameRepository := dataaccess2.NewGameRepository(connection)
-	gamemanagement := logic.NewGamemanagement(gameRepository)
+	playerRepository := dataaccess2.NewPlayerRepository(connection)
+	playerExceptionRepository := dataaccess2.NewPlayerExceptionRepository(connection)
+	gamemanagement := logic.NewGamemanagement(gameRepository, playerRepository, playerExceptionRepository)
 	restService := service.NewRestService(gamemanagement)
 	return restService
 }

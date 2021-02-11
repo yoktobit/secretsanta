@@ -30,13 +30,15 @@ type Gamemanagement interface {
 }
 
 type gamemanagement struct {
-	gameRepository dataaccess.GameRepository
+	gameRepository            dataaccess.GameRepository
+	playerRepository          dataaccess.PlayerRepository
+	playerExceptionRepository dataaccess.PlayerExceptionRepository
 }
 
 // NewGamemanagement is the factory method to create a new Gamemanagement
-func NewGamemanagement(gameRepository dataaccess.GameRepository) Gamemanagement {
+func NewGamemanagement(gameRepository dataaccess.GameRepository, playerRepository dataaccess.PlayerRepository, playerExceptionRepository dataaccess.PlayerExceptionRepository) Gamemanagement {
 
-	return &gamemanagement{gameRepository: gameRepository}
+	return &gamemanagement{gameRepository: gameRepository, playerRepository: playerRepository, playerExceptionRepository: playerExceptionRepository}
 }
 
 // CreateNewGame creates a new Game
@@ -46,66 +48,66 @@ func (gamemanagement *gamemanagement) CreateNewGame(createGameTo to.CreateGameTo
 	gamemanagement.gameRepository.CreateGame(&game)
 	hashedPassword := gamemanagement.generatePassword(createGameTo.AdminPassword)
 	player := dataaccess.Player{Name: createGameTo.AdminUser, Password: hashedPassword, GameID: game.ID, Role: dataaccess.RoleAdmin.String(), Status: dataaccess.Ready.String()}
-	gamemanagement.gameRepository.CreatePlayer(&player)
+	gamemanagement.playerRepository.CreatePlayer(&player)
 	result := to.CreateGameResponseTo{Code: code, Link: gamemanagement.generateLink(code)}
 	return result
 }
 
 // AddPlayerToGame adds a new player to an existing game
 func (gamemanagement *gamemanagement) AddPlayerToGame(addPlayerTo to.AddRemovePlayerTo) {
-	game, _ := gamemanagement.gameRepository.GetGameByCode(addPlayerTo.GameCode)
+	game, _ := gamemanagement.gameRepository.FindGameByCode(addPlayerTo.GameCode)
 	player := dataaccess.Player{Name: addPlayerTo.Name, GameID: game.ID, Role: dataaccess.RolePlayer.String()}
-	gamemanagement.gameRepository.CreatePlayer(&player)
+	gamemanagement.playerRepository.CreatePlayer(&player)
 	game.Status = dataaccess.Waiting.String()
 	gamemanagement.gameRepository.UpdateGame(&game)
 }
 
 // RemovePlayerFromGame removes an existing player from an existing game
 func (gamemanagement *gamemanagement) RemovePlayerFromGame(removePlayerTo to.AddRemovePlayerTo) {
-	game, _ := gamemanagement.gameRepository.GetGameByCode(removePlayerTo.GameCode)
-	player, error := gamemanagement.gameRepository.GetPlayerByNameAndGameID(removePlayerTo.Name, game.ID)
+	game, _ := gamemanagement.gameRepository.FindGameByCode(removePlayerTo.GameCode)
+	player, error := gamemanagement.playerRepository.FindPlayerByNameAndGameID(removePlayerTo.Name, game.ID)
 	if error == nil {
-		gamemanagement.gameRepository.DeleteExceptionByPlayerID(player.ID)
-		gamemanagement.gameRepository.DeletePlayerByNameAndGameID(removePlayerTo.Name, game.ID)
+		gamemanagement.playerExceptionRepository.DeleteExceptionByPlayerID(player.ID)
+		gamemanagement.playerRepository.DeletePlayerByNameAndGameID(removePlayerTo.Name, game.ID)
 	}
 	gamemanagement.refreshGameStatus(&game)
 }
 
 // RegisterPlayerPassword registers the password for a player and tells he/she is ready to go
 func (gamemanagement *gamemanagement) RegisterPlayerPassword(registerPlayerPasswordTo to.RegisterLoginPlayerPasswordTo) {
-	game, _ := gamemanagement.gameRepository.GetGameByCode(registerPlayerPasswordTo.GameCode)
-	player, _ := gamemanagement.gameRepository.GetPlayerByNameAndGameID(registerPlayerPasswordTo.Name, game.ID)
+	game, _ := gamemanagement.gameRepository.FindGameByCode(registerPlayerPasswordTo.GameCode)
+	player, _ := gamemanagement.playerRepository.FindPlayerByNameAndGameID(registerPlayerPasswordTo.Name, game.ID)
 	player.Password = gamemanagement.generatePassword(registerPlayerPasswordTo.Password)
 	player.Status = dataaccess.Ready.String()
-	gamemanagement.gameRepository.UpdatePlayer(&player)
+	gamemanagement.playerRepository.UpdatePlayer(&player)
 	gamemanagement.refreshGameStatus(&game)
 }
 
 // AddException adds a new exception so that PlayerA doesnt have to gift PlayerB
 func (gamemanagement *gamemanagement) AddException(addExceptionTo to.AddExceptionTo) {
-	game, _ := gamemanagement.gameRepository.GetGameByCode(addExceptionTo.GameCode)
-	playerA, _ := gamemanagement.gameRepository.GetPlayerByNameAndGameID(addExceptionTo.NameA, game.ID)
-	playerB, _ := gamemanagement.gameRepository.GetPlayerByNameAndGameID(addExceptionTo.NameB, game.ID)
-	_, error := gamemanagement.gameRepository.GetExceptionByIds(playerA.ID, playerB.ID, game.ID)
+	game, _ := gamemanagement.gameRepository.FindGameByCode(addExceptionTo.GameCode)
+	playerA, _ := gamemanagement.playerRepository.FindPlayerByNameAndGameID(addExceptionTo.NameA, game.ID)
+	playerB, _ := gamemanagement.playerRepository.FindPlayerByNameAndGameID(addExceptionTo.NameB, game.ID)
+	_, error := gamemanagement.playerExceptionRepository.FindExceptionByIds(playerA.ID, playerB.ID, game.ID)
 	if error != nil {
 		playerException := dataaccess.PlayerException{PlayerA: playerA, PlayerB: playerB, GameID: game.ID}
-		gamemanagement.gameRepository.CreatePlayerException(&playerException)
+		gamemanagement.playerExceptionRepository.CreatePlayerException(&playerException)
 	}
 }
 
 // GetBasicGameByCode fetches the game from the DB
 func (gamemanagement *gamemanagement) GetBasicGameByCode(code string) to.GetBasicGameResponseTo {
-	game, _ := gamemanagement.gameRepository.GetGameByCode(code)
+	game, _ := gamemanagement.gameRepository.FindGameByCode(code)
 	gameResponseTo := to.GetBasicGameResponseTo{Title: game.Title, Description: game.Description, Code: game.Code}
 	return gameResponseTo
 }
 
 // GetFullGameByCode fetches the game from the DB
 func (gamemanagement *gamemanagement) GetFullGameByCode(code string, playerName string) to.GetFullGameResponseTo {
-	game, _ := gamemanagement.gameRepository.GetGameByCode(code)
+	game, _ := gamemanagement.gameRepository.FindGameByCode(code)
 	gameResponseTo := to.GetFullGameResponseTo{Title: game.Title, Description: game.Description, Status: game.Status, Code: game.Code}
 	if game.Status == dataaccess.Drawn.String() {
-		player := gamemanagement.gameRepository.GetPlayerWithAssociationsByNameAndGameID(playerName, game.ID)
+		player := gamemanagement.playerRepository.FindPlayerWithAssociationsByNameAndGameID(playerName, game.ID)
 		gameResponseTo.Gifted = player.Gifted.Name
 	}
 	return gameResponseTo
@@ -113,8 +115,8 @@ func (gamemanagement *gamemanagement) GetFullGameByCode(code string, playerName 
 
 // GetPlayersByCode fetches the players of a game from the DB
 func (gamemanagement *gamemanagement) GetPlayersByCode(code string) []to.PlayerResponseTo {
-	game, _ := gamemanagement.gameRepository.GetGameByCode(code)
-	players := gamemanagement.gameRepository.GetPlayersByGameID(game.ID)
+	game, _ := gamemanagement.gameRepository.FindGameByCode(code)
+	players := gamemanagement.playerRepository.FindPlayersByGameID(game.ID)
 	playerResponseTos := make([]to.PlayerResponseTo, 0)
 	for _, player := range players {
 		playerResponseTo := to.PlayerResponseTo{Name: player.Name, Status: player.Status}
@@ -125,8 +127,8 @@ func (gamemanagement *gamemanagement) GetPlayersByCode(code string) []to.PlayerR
 
 // GetPlayerRoleByCodeAndName fetches the player role in a game from the DB
 func (gamemanagement *gamemanagement) GetPlayerRoleByCodeAndName(code string, name string) string {
-	game, _ := gamemanagement.gameRepository.GetGameByCode(code)
-	player, error := gamemanagement.gameRepository.GetPlayerByNameAndGameID(name, game.ID)
+	game, _ := gamemanagement.gameRepository.FindGameByCode(code)
+	player, error := gamemanagement.playerRepository.FindPlayerByNameAndGameID(name, game.ID)
 	if error == nil {
 		log.WithField("role", player.Role).Debug("Rolle gefunden")
 		return player.Role
@@ -136,8 +138,8 @@ func (gamemanagement *gamemanagement) GetPlayerRoleByCodeAndName(code string, na
 
 // GetExceptionsByCode returns the draw exceptions in a game
 func (gamemanagement *gamemanagement) GetExceptionsByCode(code string) []to.ExceptionResponseTo {
-	game, _ := gamemanagement.gameRepository.GetGameByCode(code)
-	playerExceptions := gamemanagement.gameRepository.GetExceptionsWithAssociationsByGameID(game.ID)
+	game, _ := gamemanagement.gameRepository.FindGameByCode(code)
+	playerExceptions := gamemanagement.playerExceptionRepository.FindExceptionsWithAssociationsByGameID(game.ID)
 	exceptionResponseTos := make([]to.ExceptionResponseTo, 0)
 	for _, playerException := range playerExceptions {
 		exceptionResponseTo := to.ExceptionResponseTo{NameA: playerException.PlayerA.Name, NameB: playerException.PlayerB.Name}
@@ -150,13 +152,13 @@ func (gamemanagement *gamemanagement) GetExceptionsByCode(code string) []to.Exce
 func (gamemanagement *gamemanagement) LoginPlayer(loginPlayerPasswordTo to.RegisterLoginPlayerPasswordTo) to.RegisterLoginPlayerPasswordResponseTo {
 	var player dataaccess.Player
 	var loginPlayerPasswordResponseTo to.RegisterLoginPlayerPasswordResponseTo
-	game, error := gamemanagement.gameRepository.GetGameByCode(loginPlayerPasswordTo.GameCode)
+	game, error := gamemanagement.gameRepository.FindGameByCode(loginPlayerPasswordTo.GameCode)
 	if error != nil {
 		log.WithField("gameCode", loginPlayerPasswordTo.GameCode).Info("Game not found")
 		gamemanagement.writeLoginError(&loginPlayerPasswordResponseTo)
 		return loginPlayerPasswordResponseTo
 	}
-	player, err := gamemanagement.gameRepository.GetPlayerByNameAndGameID(loginPlayerPasswordTo.Name, game.ID)
+	player, err := gamemanagement.playerRepository.FindPlayerByNameAndGameID(loginPlayerPasswordTo.Name, game.ID)
 	if err != nil {
 		log.WithFields(log.Fields{"name": loginPlayerPasswordTo.Name, "gameCode": loginPlayerPasswordTo.GameCode}).Info("Player not found")
 		gamemanagement.writeLoginError(&loginPlayerPasswordResponseTo)
@@ -177,9 +179,9 @@ func (gamemanagement *gamemanagement) LoginPlayer(loginPlayerPasswordTo to.Regis
 
 // DrawGame draws the lots
 func (gamemanagement *gamemanagement) DrawGame(drawGameTo to.DrawGameTo) to.DrawGameResponseTo {
-	game, _ := gamemanagement.gameRepository.GetGameByCode(drawGameTo.GameCode)
-	players := gamemanagement.gameRepository.GetPlayersByGameID(game.ID)
-	exceptions := gamemanagement.gameRepository.GetExceptionsWithAssociationsByGameID(game.ID)
+	game, _ := gamemanagement.gameRepository.FindGameByCode(drawGameTo.GameCode)
+	players := gamemanagement.playerRepository.FindPlayersByGameID(game.ID)
+	exceptions := gamemanagement.playerExceptionRepository.FindExceptionsWithAssociationsByGameID(game.ID)
 	var lots map[*dataaccess.Player]*dataaccess.Player = make(map[*dataaccess.Player]*dataaccess.Player)
 	rndSource := rand.NewSource(time.Now().UnixNano())
 	rnd := rand.New(rndSource)
@@ -217,7 +219,7 @@ func (gamemanagement *gamemanagement) DrawGame(drawGameTo to.DrawGameTo) to.Draw
 
 // ResetGame resets a game
 func (gamemanagement *gamemanagement) ResetGame(gameCode string) {
-	game, _ := gamemanagement.gameRepository.GetGameByCode(gameCode)
+	game, _ := gamemanagement.gameRepository.FindGameByCode(gameCode)
 	game.Status = dataaccess.Ready.String()
 	gamemanagement.gameRepository.UpdateGame(&game)
 }
@@ -227,7 +229,7 @@ func (gamemanagement *gamemanagement) saveLots(lots map[*dataaccess.Player]*data
 	for giftee, gifted := range lots {
 
 		giftee.Gifted = gifted
-		gamemanagement.gameRepository.UpdatePlayer(giftee)
+		gamemanagement.playerRepository.UpdatePlayer(giftee)
 	}
 }
 
@@ -277,7 +279,7 @@ func (gamemanagement *gamemanagement) generatePassword(plainPassword string) str
 }
 
 func (gamemanagement *gamemanagement) refreshGameStatus(game *dataaccess.Game) {
-	_, error := gamemanagement.gameRepository.GetFirstUnreadyPlayerByGameID(game.ID)
+	_, error := gamemanagement.playerRepository.FindFirstUnreadyPlayerByGameID(game.ID)
 	if error != nil {
 		game.Status = dataaccess.Ready.String()
 		gamemanagement.gameRepository.UpdateGame(game)
