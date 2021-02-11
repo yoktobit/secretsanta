@@ -21,7 +21,7 @@ var _ = Describe("Repository", func() {
 
 	Context("CRUD", func() {
 		gameCode := "123"
-		game := da.Game{Title: "Title", Description: "Desc", Code: gameCode, Status: da.Created.String()}
+		game := da.Game{Title: "Title", Description: "Desc", Code: gameCode, Status: da.StatusCreated.String()}
 		It("should create a game", func() {
 			repository.CreateGame(&game)
 			Expect(game.ID).ShouldNot(BeNil())

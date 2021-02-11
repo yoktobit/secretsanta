@@ -44,10 +44,10 @@ func NewGamemanagement(gameRepository dataaccess.GameRepository, playerRepositor
 // CreateNewGame creates a new Game
 func (gamemanagement *gamemanagement) CreateNewGame(createGameTo to.CreateGameTo) to.CreateGameResponseTo {
 	code := gamemanagement.generateCode()
-	game := dataaccess.Game{Code: code, Title: createGameTo.Title, Description: createGameTo.Description, Status: dataaccess.Created.String()}
+	game := dataaccess.Game{Code: code, Title: createGameTo.Title, Description: createGameTo.Description, Status: dataaccess.StatusCreated.String()}
 	gamemanagement.gameRepository.CreateGame(&game)
 	hashedPassword := gamemanagement.generatePassword(createGameTo.AdminPassword)
-	player := dataaccess.Player{Name: createGameTo.AdminUser, Password: hashedPassword, GameID: game.ID, Role: dataaccess.RoleAdmin.String(), Status: dataaccess.Ready.String()}
+	player := dataaccess.Player{Name: createGameTo.AdminUser, Password: hashedPassword, GameID: game.ID, Role: dataaccess.RoleAdmin.String(), Status: dataaccess.StatusReady.String()}
 	gamemanagement.playerRepository.CreatePlayer(&player)
 	result := to.CreateGameResponseTo{Code: code, Link: gamemanagement.generateLink(code)}
 	return result
@@ -58,7 +58,7 @@ func (gamemanagement *gamemanagement) AddPlayerToGame(addPlayerTo to.AddRemovePl
 	game, _ := gamemanagement.gameRepository.FindGameByCode(addPlayerTo.GameCode)
 	player := dataaccess.Player{Name: addPlayerTo.Name, GameID: game.ID, Role: dataaccess.RolePlayer.String()}
 	gamemanagement.playerRepository.CreatePlayer(&player)
-	game.Status = dataaccess.Waiting.String()
+	game.Status = dataaccess.StatusWaiting.String()
 	gamemanagement.gameRepository.UpdateGame(&game)
 }
 
@@ -78,7 +78,7 @@ func (gamemanagement *gamemanagement) RegisterPlayerPassword(registerPlayerPassw
 	game, _ := gamemanagement.gameRepository.FindGameByCode(registerPlayerPasswordTo.GameCode)
 	player, _ := gamemanagement.playerRepository.FindPlayerByNameAndGameID(registerPlayerPasswordTo.Name, game.ID)
 	player.Password = gamemanagement.generatePassword(registerPlayerPasswordTo.Password)
-	player.Status = dataaccess.Ready.String()
+	player.Status = dataaccess.StatusReady.String()
 	gamemanagement.playerRepository.UpdatePlayer(&player)
 	gamemanagement.refreshGameStatus(&game)
 }
@@ -106,7 +106,7 @@ func (gamemanagement *gamemanagement) GetBasicGameByCode(code string) to.GetBasi
 func (gamemanagement *gamemanagement) GetFullGameByCode(code string, playerName string) to.GetFullGameResponseTo {
 	game, _ := gamemanagement.gameRepository.FindGameByCode(code)
 	gameResponseTo := to.GetFullGameResponseTo{Title: game.Title, Description: game.Description, Status: game.Status, Code: game.Code}
-	if game.Status == dataaccess.Drawn.String() {
+	if game.Status == dataaccess.StatusDrawn.String() {
 		player := gamemanagement.playerRepository.FindPlayerWithAssociationsByNameAndGameID(playerName, game.ID)
 		gameResponseTo.Gifted = player.Gifted.Name
 	}
@@ -207,7 +207,7 @@ func (gamemanagement *gamemanagement) DrawGame(drawGameTo to.DrawGameTo) to.Draw
 	drawGameResponseTo := to.DrawGameResponseTo{}
 	if ok {
 		gamemanagement.saveLots(lots)
-		game.Status = dataaccess.Drawn.String()
+		game.Status = dataaccess.StatusDrawn.String()
 		gamemanagement.gameRepository.UpdateGame(&game)
 	} else {
 		log.Warn("Keine plausible Auslosung gefunden")
@@ -220,7 +220,7 @@ func (gamemanagement *gamemanagement) DrawGame(drawGameTo to.DrawGameTo) to.Draw
 // ResetGame resets a game
 func (gamemanagement *gamemanagement) ResetGame(gameCode string) {
 	game, _ := gamemanagement.gameRepository.FindGameByCode(gameCode)
-	game.Status = dataaccess.Ready.String()
+	game.Status = dataaccess.StatusReady.String()
 	gamemanagement.gameRepository.UpdateGame(&game)
 }
 
@@ -281,7 +281,7 @@ func (gamemanagement *gamemanagement) generatePassword(plainPassword string) str
 func (gamemanagement *gamemanagement) refreshGameStatus(game *dataaccess.Game) {
 	_, error := gamemanagement.playerRepository.FindFirstUnreadyPlayerByGameID(game.ID)
 	if error != nil {
-		game.Status = dataaccess.Ready.String()
+		game.Status = dataaccess.StatusReady.String()
 		gamemanagement.gameRepository.UpdateGame(game)
 	}
 }

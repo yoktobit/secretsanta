@@ -66,7 +66,7 @@ func (playerRepository *playerRepository) FindPlayersByGameID(gameID uint) []*Pl
 func (playerRepository *playerRepository) FindFirstUnreadyPlayerByGameID(gameID uint) (Player, error) {
 
 	var otherPlayer Player
-	result := playerRepository.connection.Connection().First(&otherPlayer, "game_id = ? AND status != ?", gameID, Ready.String())
+	result := playerRepository.connection.Connection().First(&otherPlayer, "game_id = ? AND status != ?", gameID, StatusReady.String())
 	return otherPlayer, result.Error
 }
 
