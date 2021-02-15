@@ -6,8 +6,8 @@ import (
 
 // GameRepository holds all the database access functions
 type GameRepository interface {
-	CreateGame(game *Game)
-	UpdateGame(game *Game)
+	CreateGame(c dataaccess.Connection, game *Game)
+	UpdateGame(c dataaccess.Connection, game *Game)
 	FindGameByCode(code string) (Game, error)
 }
 
@@ -22,9 +22,9 @@ func NewGameRepository(connection dataaccess.Connection) GameRepository {
 }
 
 // CreateGame creates a game
-func (gameRepository *gameRepository) CreateGame(game *Game) {
+func (gameRepository *gameRepository) CreateGame(c dataaccess.Connection, game *Game) {
 
-	gameRepository.connection.Connection().Create(game)
+	c.Connection().Create(game)
 	gameRepository.connection.Connection().Commit()
 }
 
@@ -37,7 +37,7 @@ func (gameRepository *gameRepository) FindGameByCode(code string) (Game, error) 
 }
 
 // UpdateGame updates a game
-func (gameRepository *gameRepository) UpdateGame(game *Game) {
+func (gameRepository *gameRepository) UpdateGame(c dataaccess.Connection, game *Game) {
 
-	gameRepository.connection.Connection().Save(game)
+	c.Connection().Save(game)
 }

@@ -7,8 +7,8 @@ import (
 
 // PlayerExceptionRepository holds all the database access functions
 type PlayerExceptionRepository interface {
-	CreatePlayerException(playerException *PlayerException)
-	DeleteExceptionByPlayerID(playerID uint)
+	CreatePlayerException(c dataaccess.Connection, playerException *PlayerException)
+	DeleteExceptionByPlayerID(c dataaccess.Connection, playerID uint)
 	FindExceptionByIds(playerAId uint, playerBId uint, gameID uint) (PlayerException, error)
 	FindExceptionsWithAssociationsByGameID(gameID uint) []*PlayerException
 }
@@ -24,9 +24,9 @@ func NewPlayerExceptionRepository(connection dataaccess.Connection) PlayerExcept
 }
 
 // CreatePlayerException creates an Exception
-func (playerExceptionRepository *playerExceptionRepository) CreatePlayerException(playerException *PlayerException) {
+func (playerExceptionRepository *playerExceptionRepository) CreatePlayerException(c dataaccess.Connection, playerException *PlayerException) {
 
-	playerExceptionRepository.connection.Connection().Create(playerException)
+	c.Connection().Create(playerException)
 }
 
 // FindExceptionByIds receives an exception by player ids and game id
@@ -46,8 +46,8 @@ func (playerExceptionRepository *playerExceptionRepository) FindExceptionsWithAs
 }
 
 // DeleteExceptionByPlayerID deletes the game by the IDs of Player A and Player B
-func (playerExceptionRepository *playerExceptionRepository) DeleteExceptionByPlayerID(playerID uint) {
+func (playerExceptionRepository *playerExceptionRepository) DeleteExceptionByPlayerID(c dataaccess.Connection, playerID uint) {
 
 	var exception PlayerException
-	playerExceptionRepository.connection.Connection().Delete(&exception, "player_a_id = ? OR player_b_id = ?", playerID, playerID)
+	c.Connection().Delete(&exception, "player_a_id = ? OR player_b_id = ?", playerID, playerID)
 }

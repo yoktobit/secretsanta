@@ -20,7 +20,7 @@ func InitializeEvent() service.RestService {
 	gameRepository := dataaccess2.NewGameRepository(connection)
 	playerRepository := dataaccess2.NewPlayerRepository(connection)
 	playerExceptionRepository := dataaccess2.NewPlayerExceptionRepository(connection)
-	gamemanagement := logic.NewGamemanagement(gameRepository, playerRepository, playerExceptionRepository)
+	gamemanagement := logic.NewGamemanagement(connection, gameRepository, playerRepository, playerExceptionRepository)
 	restService := service.NewRestService(gamemanagement)
 	return restService
 }

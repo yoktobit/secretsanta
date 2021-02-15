@@ -7,6 +7,7 @@ import (
 	"github.com/lithammer/shortuuid"
 	"github.com/yoktobit/secretsanta/internal/gamemanagement/dataaccess"
 	"github.com/yoktobit/secretsanta/internal/gamemanagement/logic/to"
+	gda "github.com/yoktobit/secretsanta/internal/general/dataaccess"
 	"golang.org/x/crypto/bcrypt"
 
 	log "github.com/sirupsen/logrus"
@@ -14,6 +15,7 @@ import (
 
 // Gamemanagement contains the business logic for this app
 type Gamemanagement interface {
+	Connection() gda.Connection
 	CreateNewGame(createGameTo to.CreateGameTo) to.CreateGameResponseTo
 	AddPlayerToGame(addPlayerTo to.AddRemovePlayerTo)
 	RemovePlayerFromGame(removePlayerTo to.AddRemovePlayerTo)
@@ -30,25 +32,35 @@ type Gamemanagement interface {
 }
 
 type gamemanagement struct {
+	connection                gda.Connection
 	gameRepository            dataaccess.GameRepository
 	playerRepository          dataaccess.PlayerRepository
 	playerExceptionRepository dataaccess.PlayerExceptionRepository
 }
 
 // NewGamemanagement is the factory method to create a new Gamemanagement
-func NewGamemanagement(gameRepository dataaccess.GameRepository, playerRepository dataaccess.PlayerRepository, playerExceptionRepository dataaccess.PlayerExceptionRepository) Gamemanagement {
+func NewGamemanagement(connection gda.Connection, gameRepository dataaccess.GameRepository, playerRepository dataaccess.PlayerRepository, playerExceptionRepository dataaccess.PlayerExceptionRepository) Gamemanagement {
 
-	return &gamemanagement{gameRepository: gameRepository, playerRepository: playerRepository, playerExceptionRepository: playerExceptionRepository}
+	return &gamemanagement{connection: connection, gameRepository: gameRepository, playerRepository: playerRepository, playerExceptionRepository: playerExceptionRepository}
+}
+
+// Connection returns the database connection
+func (gamemanagement *gamemanagement) Connection() gda.Connection {
+
+	return gamemanagement.connection
 }
 
 // CreateNewGame creates a new Game
 func (gamemanagement *gamemanagement) CreateNewGame(createGameTo to.CreateGameTo) to.CreateGameResponseTo {
 	code := gamemanagement.generateCode()
 	game := dataaccess.Game{Code: code, Title: createGameTo.Title, Description: createGameTo.Description, Status: dataaccess.StatusCreated.String()}
-	gamemanagement.gameRepository.CreateGame(&game)
 	hashedPassword := gamemanagement.generatePassword(createGameTo.AdminPassword)
-	player := dataaccess.Player{Name: createGameTo.AdminUser, Password: hashedPassword, GameID: game.ID, Role: dataaccess.RoleAdmin.String(), Status: dataaccess.StatusReady.String()}
-	gamemanagement.playerRepository.CreatePlayer(&player)
+	gamemanagement.Connection().NewTransaction(func(c gda.Connection) error {
+		gamemanagement.gameRepository.CreateGame(c, &game)
+		player := dataaccess.Player{Name: createGameTo.AdminUser, Password: hashedPassword, GameID: game.ID, Role: dataaccess.RoleAdmin.String(), Status: dataaccess.StatusReady.String()}
+		gamemanagement.playerRepository.CreatePlayer(c, &player)
+		return nil
+	})
 	result := to.CreateGameResponseTo{Code: code, Link: gamemanagement.generateLink(code)}
 	return result
 }
@@ -57,20 +69,26 @@ func (gamemanagement *gamemanagement) CreateNewGame(createGameTo to.CreateGameTo
 func (gamemanagement *gamemanagement) AddPlayerToGame(addPlayerTo to.AddRemovePlayerTo) {
 	game, _ := gamemanagement.gameRepository.FindGameByCode(addPlayerTo.GameCode)
 	player := dataaccess.Player{Name: addPlayerTo.Name, GameID: game.ID, Role: dataaccess.RolePlayer.String()}
-	gamemanagement.playerRepository.CreatePlayer(&player)
 	game.Status = dataaccess.StatusWaiting.String()
-	gamemanagement.gameRepository.UpdateGame(&game)
+	gamemanagement.Connection().NewTransaction(func(c gda.Connection) error {
+		gamemanagement.playerRepository.CreatePlayer(c, &player)
+		gamemanagement.gameRepository.UpdateGame(c, &game)
+		return nil
+	})
 }
 
 // RemovePlayerFromGame removes an existing player from an existing game
 func (gamemanagement *gamemanagement) RemovePlayerFromGame(removePlayerTo to.AddRemovePlayerTo) {
 	game, _ := gamemanagement.gameRepository.FindGameByCode(removePlayerTo.GameCode)
-	player, error := gamemanagement.playerRepository.FindPlayerByNameAndGameID(removePlayerTo.Name, game.ID)
-	if error == nil {
-		gamemanagement.playerExceptionRepository.DeleteExceptionByPlayerID(player.ID)
-		gamemanagement.playerRepository.DeletePlayerByNameAndGameID(removePlayerTo.Name, game.ID)
+	player, err := gamemanagement.playerRepository.FindPlayerByNameAndGameID(removePlayerTo.Name, game.ID)
+	if err == nil {
+		gamemanagement.Connection().NewTransaction(func(c gda.Connection) error {
+			gamemanagement.playerExceptionRepository.DeleteExceptionByPlayerID(c, player.ID)
+			gamemanagement.playerRepository.DeletePlayerByNameAndGameID(c, removePlayerTo.Name, game.ID)
+			gamemanagement.refreshGameStatus(c, &game)
+			return nil
+		})
 	}
-	gamemanagement.refreshGameStatus(&game)
 }
 
 // RegisterPlayerPassword registers the password for a player and tells he/she is ready to go
@@ -79,8 +97,11 @@ func (gamemanagement *gamemanagement) RegisterPlayerPassword(registerPlayerPassw
 	player, _ := gamemanagement.playerRepository.FindPlayerByNameAndGameID(registerPlayerPasswordTo.Name, game.ID)
 	player.Password = gamemanagement.generatePassword(registerPlayerPasswordTo.Password)
 	player.Status = dataaccess.StatusReady.String()
-	gamemanagement.playerRepository.UpdatePlayer(&player)
-	gamemanagement.refreshGameStatus(&game)
+	gamemanagement.Connection().NewTransaction(func(c gda.Connection) error {
+		gamemanagement.playerRepository.UpdatePlayer(c, &player)
+		gamemanagement.refreshGameStatus(c, &game)
+		return nil
+	})
 }
 
 // AddException adds a new exception so that PlayerA doesnt have to gift PlayerB
@@ -88,10 +109,13 @@ func (gamemanagement *gamemanagement) AddException(addExceptionTo to.AddExceptio
 	game, _ := gamemanagement.gameRepository.FindGameByCode(addExceptionTo.GameCode)
 	playerA, _ := gamemanagement.playerRepository.FindPlayerByNameAndGameID(addExceptionTo.NameA, game.ID)
 	playerB, _ := gamemanagement.playerRepository.FindPlayerByNameAndGameID(addExceptionTo.NameB, game.ID)
-	_, error := gamemanagement.playerExceptionRepository.FindExceptionByIds(playerA.ID, playerB.ID, game.ID)
-	if error != nil {
+	_, err := gamemanagement.playerExceptionRepository.FindExceptionByIds(playerA.ID, playerB.ID, game.ID)
+	if err != nil {
 		playerException := dataaccess.PlayerException{PlayerA: playerA, PlayerB: playerB, GameID: game.ID}
-		gamemanagement.playerExceptionRepository.CreatePlayerException(&playerException)
+		gamemanagement.connection.NewTransaction(func(c gda.Connection) error {
+			gamemanagement.playerExceptionRepository.CreatePlayerException(c, &playerException)
+			return nil
+		})
 	}
 }
 
@@ -206,9 +230,12 @@ func (gamemanagement *gamemanagement) DrawGame(drawGameTo to.DrawGameTo) to.Draw
 	}
 	drawGameResponseTo := to.DrawGameResponseTo{}
 	if ok {
-		gamemanagement.saveLots(lots)
 		game.Status = dataaccess.StatusDrawn.String()
-		gamemanagement.gameRepository.UpdateGame(&game)
+		gamemanagement.Connection().NewTransaction(func(c gda.Connection) error {
+			gamemanagement.saveLots(c, lots)
+			gamemanagement.gameRepository.UpdateGame(c, &game)
+			return nil
+		})
 	} else {
 		log.Warn("Keine plausible Auslosung gefunden")
 		drawGameResponseTo.Message = "Nach 100 Versuchen wurde kein plausibles Ergebnis gefunden. Bitte nochmal versuchen oder weniger Ausnahmen definieren."
@@ -221,15 +248,18 @@ func (gamemanagement *gamemanagement) DrawGame(drawGameTo to.DrawGameTo) to.Draw
 func (gamemanagement *gamemanagement) ResetGame(gameCode string) {
 	game, _ := gamemanagement.gameRepository.FindGameByCode(gameCode)
 	game.Status = dataaccess.StatusReady.String()
-	gamemanagement.gameRepository.UpdateGame(&game)
+	gamemanagement.Connection().NewTransaction(func(c gda.Connection) error {
+		gamemanagement.gameRepository.UpdateGame(c, &game)
+		return nil
+	})
 }
 
-func (gamemanagement *gamemanagement) saveLots(lots map[*dataaccess.Player]*dataaccess.Player) {
+func (gamemanagement *gamemanagement) saveLots(c gda.Connection, lots map[*dataaccess.Player]*dataaccess.Player) {
 
 	for giftee, gifted := range lots {
 
 		giftee.Gifted = gifted
-		gamemanagement.playerRepository.UpdatePlayer(giftee)
+		gamemanagement.playerRepository.UpdatePlayer(c, giftee)
 	}
 }
 
@@ -278,10 +308,10 @@ func (gamemanagement *gamemanagement) generatePassword(plainPassword string) str
 	return string(hash)
 }
 
-func (gamemanagement *gamemanagement) refreshGameStatus(game *dataaccess.Game) {
+func (gamemanagement *gamemanagement) refreshGameStatus(c gda.Connection, game *dataaccess.Game) {
 	_, error := gamemanagement.playerRepository.FindFirstUnreadyPlayerByGameID(game.ID)
 	if error != nil {
 		game.Status = dataaccess.StatusReady.String()
-		gamemanagement.gameRepository.UpdateGame(game)
+		gamemanagement.gameRepository.UpdateGame(c, game)
 	}
 }

@@ -10,9 +10,10 @@ import (
 var _ = Describe("Repository", func() {
 
 	var repository da.GameRepository
+	var connection gda.Connection
 
 	BeforeEach(func() {
-		connection := gda.NewConnectionWithConfig(config)
+		connection = gda.NewConnectionWithConfig(config)
 		repository = da.NewGameRepository(connection)
 		da.MigrateDb(connection.Connection())
 	})
@@ -23,7 +24,7 @@ var _ = Describe("Repository", func() {
 		gameCode := "123"
 		game := da.Game{Title: "Title", Description: "Desc", Code: gameCode, Status: da.StatusCreated.String()}
 		It("should create a game", func() {
-			repository.CreateGame(&game)
+			repository.CreateGame(connection, &game)
 			Expect(game.ID).ShouldNot(BeNil())
 		})
 		It("should read a game", func() {
@@ -33,7 +34,7 @@ var _ = Describe("Repository", func() {
 		})
 		It("should update a game", func() {
 			game.Description = "New Description"
-			repository.UpdateGame(&game)
+			repository.UpdateGame(connection, &game)
 			gameAfterUpdate, err := repository.FindGameByCode(gameCode)
 			game.CreatedAt = gameAfterUpdate.CreatedAt
 			game.UpdatedAt = gameAfterUpdate.UpdatedAt

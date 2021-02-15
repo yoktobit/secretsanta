@@ -7,9 +7,9 @@ import (
 
 // PlayerRepository holds all the database access functions
 type PlayerRepository interface {
-	CreatePlayer(player *Player)
-	UpdatePlayer(player *Player)
-	DeletePlayerByNameAndGameID(playerName string, gameID uint)
+	CreatePlayer(c dataaccess.Connection, player *Player)
+	UpdatePlayer(c dataaccess.Connection, player *Player)
+	DeletePlayerByNameAndGameID(c dataaccess.Connection, playerName string, gameID uint)
 	FindPlayerByNameAndGameID(name string, gameID uint) (Player, error)
 	FindPlayerWithAssociationsByNameAndGameID(playerName string, gameID uint) Player
 	FindFirstUnreadyPlayerByGameID(gameID uint) (Player, error)
@@ -27,15 +27,15 @@ func NewPlayerRepository(connection dataaccess.Connection) PlayerRepository {
 }
 
 // CreatePlayer creates a player
-func (playerRepository *playerRepository) CreatePlayer(player *Player) {
+func (playerRepository *playerRepository) CreatePlayer(c dataaccess.Connection, player *Player) {
 
-	playerRepository.connection.Connection().Create(player)
+	c.Connection().Create(player)
 }
 
 // UpdatePlayer updates a player
-func (playerRepository *playerRepository) UpdatePlayer(player *Player) {
+func (playerRepository *playerRepository) UpdatePlayer(c dataaccess.Connection, player *Player) {
 
-	playerRepository.connection.Connection().Save(player)
+	c.Connection().Save(player)
 }
 
 // FindPlayerByNameAndGameID Get Player by name and game id
@@ -71,8 +71,8 @@ func (playerRepository *playerRepository) FindFirstUnreadyPlayerByGameID(gameID 
 }
 
 // DeletePlayerByNameAndGameID deletes a player by name and game ID
-func (playerRepository *playerRepository) DeletePlayerByNameAndGameID(playerName string, gameID uint) {
+func (playerRepository *playerRepository) DeletePlayerByNameAndGameID(c dataaccess.Connection, playerName string, gameID uint) {
 
 	var player Player
-	playerRepository.connection.Connection().Delete(&player, "name = ? AND game_id = ?", playerName, gameID)
+	c.Connection().Delete(&player, "name = ? AND game_id = ?", playerName, gameID)
 }

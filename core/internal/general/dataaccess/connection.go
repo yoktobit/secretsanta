@@ -23,6 +23,7 @@ type Config struct {
 // Connection encapsulates some DB connection
 type Connection interface {
 	Connection() *gorm.DB
+	NewTransaction(f func(Connection) error)
 }
 
 type connection struct {
@@ -54,9 +55,16 @@ func NewConnectionWithConfig(config Config) Connection {
 }
 
 // Connection gets the Gorm-Connection from the Connection object
-func (connection *connection) Connection() *gorm.DB {
+func (c *connection) Connection() *gorm.DB {
 
-	return connection.db
+	return c.db
+}
+
+// NewTransaction defines a new Transaction
+func (c connection) NewTransaction(f func(Connection) error) {
+	c.Connection().Transaction(func(tx *gorm.DB) error {
+		return f(&connection{db: tx})
+	})
 }
 
 func connect(user string, password string, dbname string, host string, port string) Connection {
