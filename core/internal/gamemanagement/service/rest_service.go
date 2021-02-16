@@ -3,6 +3,7 @@ package service
 import (
 	"net/http"
 
+	"github.com/go-playground/validator/v10"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/gin-contrib/sessions"
@@ -34,7 +35,15 @@ func (restService *restService) DefineRoutes(r *gin.RouterGroup) {
 		log.Infoln("Session ermittelt")
 		var createGameTo to.CreateGameTo
 		c.BindJSON(&createGameTo)
-		createGameResponseTo := restService.gamemanagement.CreateNewGame(createGameTo)
+		createGameResponseTo, err := restService.gamemanagement.CreateNewGame(createGameTo)
+		if err != nil {
+			_, ok := err.(validator.ValidationErrors)
+			if ok {
+				c.Status(http.StatusBadRequest)
+			} else {
+				c.Status(http.StatusInternalServerError)
+			}
+		}
 		log.Infoln("Spiel erstellt")
 		session.Clear()
 		session.Set("gameCode", createGameResponseTo.Code)

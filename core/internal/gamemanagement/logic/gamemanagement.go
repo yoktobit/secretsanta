@@ -4,6 +4,7 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/lithammer/shortuuid"
 	"github.com/yoktobit/secretsanta/internal/gamemanagement/dataaccess"
 	"github.com/yoktobit/secretsanta/internal/gamemanagement/logic/to"
@@ -16,8 +17,8 @@ import (
 // Gamemanagement contains the business logic for this app
 type Gamemanagement interface {
 	Connection() gda.Connection
-	CreateNewGame(createGameTo to.CreateGameTo) to.CreateGameResponseTo
-	AddPlayerToGame(addPlayerTo to.AddRemovePlayerTo)
+	CreateNewGame(createGameTo to.CreateGameTo) (to.CreateGameResponseTo, error)
+	AddPlayerToGame(addPlayerTo to.AddRemovePlayerTo) error
 	RemovePlayerFromGame(removePlayerTo to.AddRemovePlayerTo)
 	RegisterPlayerPassword(registerPlayerPasswordTo to.RegisterLoginPlayerPasswordTo)
 	AddException(addExceptionTo to.AddExceptionTo)
@@ -51,7 +52,11 @@ func (gamemanagement *gamemanagement) Connection() gda.Connection {
 }
 
 // CreateNewGame creates a new Game
-func (gamemanagement *gamemanagement) CreateNewGame(createGameTo to.CreateGameTo) to.CreateGameResponseTo {
+func (gamemanagement *gamemanagement) CreateNewGame(createGameTo to.CreateGameTo) (to.CreateGameResponseTo, error) {
+	err := validator.New().Struct(createGameTo)
+	if err != nil {
+		return to.CreateGameResponseTo{}, err
+	}
 	code := gamemanagement.generateCode()
 	game := dataaccess.Game{Code: code, Title: createGameTo.Title, Description: createGameTo.Description, Status: dataaccess.StatusCreated.String()}
 	hashedPassword := gamemanagement.generatePassword(createGameTo.AdminPassword)
@@ -61,13 +66,20 @@ func (gamemanagement *gamemanagement) CreateNewGame(createGameTo to.CreateGameTo
 		gamemanagement.playerRepository.CreatePlayer(c, &player)
 		return nil
 	})
-	result := to.CreateGameResponseTo{Code: code, Link: gamemanagement.generateLink(code)}
-	return result
+	result := to.CreateGameResponseTo{Code: code}
+	return result, nil
 }
 
 // AddPlayerToGame adds a new player to an existing game
-func (gamemanagement *gamemanagement) AddPlayerToGame(addPlayerTo to.AddRemovePlayerTo) {
-	game, _ := gamemanagement.gameRepository.FindGameByCode(addPlayerTo.GameCode)
+func (gamemanagement *gamemanagement) AddPlayerToGame(addPlayerTo to.AddRemovePlayerTo) error {
+	err := validator.New().Struct(addPlayerTo)
+	if err != nil {
+		return err
+	}
+	game, err := gamemanagement.gameRepository.FindGameByCode(addPlayerTo.GameCode)
+	if err != nil {
+		return err
+	}
 	player := dataaccess.Player{Name: addPlayerTo.Name, GameID: game.ID, Role: dataaccess.RolePlayer.String()}
 	game.Status = dataaccess.StatusWaiting.String()
 	gamemanagement.Connection().NewTransaction(func(c gda.Connection) error {
@@ -75,6 +87,7 @@ func (gamemanagement *gamemanagement) AddPlayerToGame(addPlayerTo to.AddRemovePl
 		gamemanagement.gameRepository.UpdateGame(c, &game)
 		return nil
 	})
+	return nil
 }
 
 // RemovePlayerFromGame removes an existing player from an existing game
@@ -293,10 +306,6 @@ func (gamemanagement *gamemanagement) writeLoginError(loginPlayerPasswordRespons
 
 func (gamemanagement *gamemanagement) generateCode() string {
 	return shortuuid.New()
-}
-
-func (gamemanagement *gamemanagement) generateLink(code string) string {
-	return "/game/" + code
 }
 
 func (gamemanagement *gamemanagement) generatePassword(plainPassword string) string {
