@@ -7,6 +7,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/lithammer/shortuuid"
 	"github.com/yoktobit/secretsanta/internal/gamemanagement/dataaccess"
+	gerr "github.com/yoktobit/secretsanta/internal/gamemanagement/logic/errors"
 	"github.com/yoktobit/secretsanta/internal/gamemanagement/logic/to"
 	gda "github.com/yoktobit/secretsanta/internal/general/dataaccess"
 	"golang.org/x/crypto/bcrypt"
@@ -19,9 +20,9 @@ type Gamemanagement interface {
 	Connection() gda.Connection
 	CreateNewGame(createGameTo to.CreateGameTo) (to.CreateGameResponseTo, error)
 	AddPlayerToGame(addPlayerTo to.AddRemovePlayerTo) error
-	RemovePlayerFromGame(removePlayerTo to.AddRemovePlayerTo)
-	RegisterPlayerPassword(registerPlayerPasswordTo to.RegisterLoginPlayerPasswordTo)
-	AddException(addExceptionTo to.AddExceptionTo)
+	RemovePlayerFromGame(removePlayerTo to.AddRemovePlayerTo) error
+	RegisterPlayerPassword(registerPlayerPasswordTo to.RegisterLoginPlayerPasswordTo) error
+	AddException(addExceptionTo to.AddExceptionTo) error
 	GetBasicGameByCode(code string) to.GetBasicGameResponseTo
 	GetFullGameByCode(code string, playerName string) to.GetFullGameResponseTo
 	GetPlayersByCode(code string) []to.PlayerResponseTo
@@ -91,8 +92,15 @@ func (gamemanagement *gamemanagement) AddPlayerToGame(addPlayerTo to.AddRemovePl
 }
 
 // RemovePlayerFromGame removes an existing player from an existing game
-func (gamemanagement *gamemanagement) RemovePlayerFromGame(removePlayerTo to.AddRemovePlayerTo) {
-	game, _ := gamemanagement.gameRepository.FindGameByCode(removePlayerTo.GameCode)
+func (gamemanagement *gamemanagement) RemovePlayerFromGame(removePlayerTo to.AddRemovePlayerTo) error {
+	err := validator.New().Struct(removePlayerTo)
+	if err != nil {
+		return err
+	}
+	game, err := gamemanagement.gameRepository.FindGameByCode(removePlayerTo.GameCode)
+	if err != nil {
+		return err
+	}
 	player, err := gamemanagement.playerRepository.FindPlayerByNameAndGameID(removePlayerTo.Name, game.ID)
 	if err == nil {
 		gamemanagement.Connection().NewTransaction(func(c gda.Connection) error {
@@ -102,12 +110,23 @@ func (gamemanagement *gamemanagement) RemovePlayerFromGame(removePlayerTo to.Add
 			return nil
 		})
 	}
+	return err
 }
 
 // RegisterPlayerPassword registers the password for a player and tells he/she is ready to go
-func (gamemanagement *gamemanagement) RegisterPlayerPassword(registerPlayerPasswordTo to.RegisterLoginPlayerPasswordTo) {
-	game, _ := gamemanagement.gameRepository.FindGameByCode(registerPlayerPasswordTo.GameCode)
-	player, _ := gamemanagement.playerRepository.FindPlayerByNameAndGameID(registerPlayerPasswordTo.Name, game.ID)
+func (gamemanagement *gamemanagement) RegisterPlayerPassword(registerPlayerPasswordTo to.RegisterLoginPlayerPasswordTo) error {
+	err := validator.New().Struct(registerPlayerPasswordTo)
+	if err != nil {
+		return err
+	}
+	game, err := gamemanagement.gameRepository.FindGameByCode(registerPlayerPasswordTo.GameCode)
+	if err != nil {
+		return err
+	}
+	player, err := gamemanagement.playerRepository.FindPlayerByNameAndGameID(registerPlayerPasswordTo.Name, game.ID)
+	if err != nil {
+		return err
+	}
 	player.Password = gamemanagement.generatePassword(registerPlayerPasswordTo.Password)
 	player.Status = dataaccess.StatusReady.String()
 	gamemanagement.Connection().NewTransaction(func(c gda.Connection) error {
@@ -115,21 +134,38 @@ func (gamemanagement *gamemanagement) RegisterPlayerPassword(registerPlayerPassw
 		gamemanagement.refreshGameStatus(c, &game)
 		return nil
 	})
+	return nil
 }
 
 // AddException adds a new exception so that PlayerA doesnt have to gift PlayerB
-func (gamemanagement *gamemanagement) AddException(addExceptionTo to.AddExceptionTo) {
-	game, _ := gamemanagement.gameRepository.FindGameByCode(addExceptionTo.GameCode)
-	playerA, _ := gamemanagement.playerRepository.FindPlayerByNameAndGameID(addExceptionTo.NameA, game.ID)
-	playerB, _ := gamemanagement.playerRepository.FindPlayerByNameAndGameID(addExceptionTo.NameB, game.ID)
-	_, err := gamemanagement.playerExceptionRepository.FindExceptionByIds(playerA.ID, playerB.ID, game.ID)
+func (gamemanagement *gamemanagement) AddException(addExceptionTo to.AddExceptionTo) error {
+	err := validator.New().Struct(addExceptionTo)
+	if err != nil {
+		return err
+	}
+	game, err := gamemanagement.gameRepository.FindGameByCode(addExceptionTo.GameCode)
+	if err != nil {
+		return err
+	}
+	playerA, err := gamemanagement.playerRepository.FindPlayerByNameAndGameID(addExceptionTo.NameA, game.ID)
+	if err != nil {
+		return err
+	}
+	playerB, err := gamemanagement.playerRepository.FindPlayerByNameAndGameID(addExceptionTo.NameB, game.ID)
+	if err != nil {
+		return err
+	}
+	_, err = gamemanagement.playerExceptionRepository.FindExceptionByIds(playerA.ID, playerB.ID, game.ID)
 	if err != nil {
 		playerException := dataaccess.PlayerException{PlayerA: playerA, PlayerB: playerB, GameID: game.ID}
 		gamemanagement.connection.NewTransaction(func(c gda.Connection) error {
 			gamemanagement.playerExceptionRepository.CreatePlayerException(c, &playerException)
 			return nil
 		})
+	} else {
+		return gerr.ErrPlayerExceptionAlreadyExists
 	}
+	return nil
 }
 
 // GetBasicGameByCode fetches the game from the DB

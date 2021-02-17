@@ -2,7 +2,7 @@ package to
 
 // AddExceptionTo gibt eine Ausnahme im Spiel an
 type AddExceptionTo struct {
-	NameA    string `json:"nameA"`
-	NameB    string `json:"nameB"`
-	GameCode string `json:"gameCode"`
+	NameA    string `json:"nameA" validate:"required"`
+	NameB    string `json:"nameB" validate:"required"`
+	GameCode string `json:"gameCode" validate:"required"`
 }

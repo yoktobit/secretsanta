@@ -2,6 +2,7 @@ package dataaccess
 
 import (
 	"github.com/yoktobit/secretsanta/internal/general/dataaccess"
+	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
 
@@ -42,7 +43,10 @@ func (playerRepository *playerRepository) UpdatePlayer(c dataaccess.Connection, 
 func (playerRepository *playerRepository) FindPlayerByNameAndGameID(name string, gameID uint) (Player, error) {
 
 	var player Player
-	result := playerRepository.connection.Connection().First(&player, "name = ? AND game_id = ?", name, gameID)
+	result := playerRepository.connection.Connection().Where("name = ? AND game_id = ?", name, gameID).Limit(1).Find(&player)
+	if result.RowsAffected == 0 {
+		return player, gorm.ErrRecordNotFound
+	}
 	return player, result.Error
 }
 

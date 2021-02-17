@@ -7,8 +7,10 @@ import (
 	. "github.com/onsi/gomega"
 	da "github.com/yoktobit/secretsanta/internal/gamemanagement/dataaccess"
 	"github.com/yoktobit/secretsanta/internal/gamemanagement/logic"
+	"github.com/yoktobit/secretsanta/internal/gamemanagement/logic/errors"
 	"github.com/yoktobit/secretsanta/internal/gamemanagement/logic/to"
 	"github.com/yoktobit/secretsanta/internal/general/dataaccess"
+	"gorm.io/gorm"
 )
 
 func expectInsertGame(mock sqlmock.Sqlmock) {
@@ -133,6 +135,141 @@ Key: 'AddRemovePlayerTo.GameCode' Error:Field validation for 'GameCode' failed o
 			err := gamemanagement.AddPlayerToGame(addRemovePlayerTo)
 			Expect(err).To(HaveOccurred())
 			Expect(err).To(MatchError("record not found"))
+		})
+		It("can be removed from a game with valid information", func() {
+			addRemovePlayerTo := to.AddRemovePlayerTo{Name: "Max", GameCode: "1"}
+			expectDefaultQuery(mock)
+			expectDefaultQuery(mock)
+			mock.ExpectBegin()
+			mock.ExpectExec("UPDATE").WithArgs(sqlmock.AnyArg(), 1, 1).WillReturnResult(sqlmock.NewResult(0, 1))
+			mock.ExpectExec("UPDATE").WithArgs(sqlmock.AnyArg(), "Max", 1).WillReturnResult(sqlmock.NewResult(0, 1))
+			expectDefaultQuery(mock)
+			mock.ExpectExec("UPDATE").WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), nil, nil, nil)
+			mock.ExpectCommit()
+			err := gamemanagement.RemovePlayerFromGame(addRemovePlayerTo)
+			Expect(err).ToNot(HaveOccurred())
+		})
+		It("failes to be removed from a game with empty information", func() {
+			addRemovePlayerTo := to.AddRemovePlayerTo{}
+			err := gamemanagement.RemovePlayerFromGame(addRemovePlayerTo)
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(BeAssignableToTypeOf(validator.ValidationErrors{}))
+			valErr := err.(validator.ValidationErrors)
+			Expect(valErr.Error()).To(BeIdenticalTo(`Key: 'AddRemovePlayerTo.Name' Error:Field validation for 'Name' failed on the 'required' tag
+Key: 'AddRemovePlayerTo.GameCode' Error:Field validation for 'GameCode' failed on the 'required' tag`))
+		})
+		It("failes to be removed from a game with no game code", func() {
+			addRemovePlayerTo := to.AddRemovePlayerTo{Name: "Max"}
+			err := gamemanagement.RemovePlayerFromGame(addRemovePlayerTo)
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(BeAssignableToTypeOf(validator.ValidationErrors{}))
+			valErr := err.(validator.ValidationErrors)
+			Expect(valErr.Error()).To(BeIdenticalTo(`Key: 'AddRemovePlayerTo.GameCode' Error:Field validation for 'GameCode' failed on the 'required' tag`))
+		})
+		It("failes to be removed from a game which does not exist", func() {
+			addRemovePlayerTo := to.AddRemovePlayerTo{Name: "Max", GameCode: "1"}
+			expectDefaultQueryWithNoResult(mock)
+			err := gamemanagement.RemovePlayerFromGame(addRemovePlayerTo)
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(MatchError("record not found"))
+		})
+		It("failes to be removed from a game where player does not exist", func() {
+			addRemovePlayerTo := to.AddRemovePlayerTo{Name: "NonExistee", GameCode: "1"}
+			expectDefaultQuery(mock)
+			expectDefaultQueryWithNoResult(mock)
+			err := gamemanagement.RemovePlayerFromGame(addRemovePlayerTo)
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(MatchError("record not found"))
+		})
+		It("should register itself with new credentials", func() {
+			registerLoginPlayerPasswordTo := to.RegisterLoginPlayerPasswordTo{Name: "Max", Password: "Pass", GameCode: "ABC"}
+			expectDefaultQueryWithNoResult(mock)
+			err := gamemanagement.RegisterPlayerPassword(registerLoginPlayerPasswordTo)
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(MatchError("record not found"))
+		})
+		It("should fail to register itself with empty credentials", func() {
+			registerLoginPlayerPasswordTo := to.RegisterLoginPlayerPasswordTo{}
+			err := gamemanagement.RegisterPlayerPassword(registerLoginPlayerPasswordTo)
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(BeAssignableToTypeOf(validator.ValidationErrors{}))
+			valErr := err.(validator.ValidationErrors)
+			Expect(valErr.Error()).To(BeIdenticalTo(`Key: 'RegisterLoginPlayerPasswordTo.GameCode' Error:Field validation for 'GameCode' failed on the 'required' tag
+Key: 'RegisterLoginPlayerPasswordTo.Name' Error:Field validation for 'Name' failed on the 'required' tag
+Key: 'RegisterLoginPlayerPasswordTo.Password' Error:Field validation for 'Password' failed on the 'required' tag`))
+		})
+		It("should fail to register itself because the game does not exist", func() {
+			registerLoginPlayerPasswordTo := to.RegisterLoginPlayerPasswordTo{Name: "Max", Password: "Pass", GameCode: "ABC"}
+			expectDefaultQueryWithNoResult(mock)
+			err := gamemanagement.RegisterPlayerPassword(registerLoginPlayerPasswordTo)
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(MatchError(gorm.ErrRecordNotFound))
+		})
+		It("should fail to register itself because the player does not exist", func() {
+			registerLoginPlayerPasswordTo := to.RegisterLoginPlayerPasswordTo{Name: "Max", Password: "Pass", GameCode: "ABC"}
+			expectDefaultQuery(mock)
+			expectDefaultQueryWithNoResult(mock)
+			err := gamemanagement.RegisterPlayerPassword(registerLoginPlayerPasswordTo)
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(MatchError(gorm.ErrRecordNotFound))
+		})
+	})
+	Context("PlayerException", func() {
+		It("should be able to be added to a game", func() {
+			addExceptionTo := to.AddExceptionTo{NameA: "Max", NameB: "Erika", GameCode: "ABC"}
+			expectDefaultQuery(mock)
+			expectDefaultQuery(mock)
+			expectDefaultQuery(mock)
+			expectDefaultQueryWithNoResult(mock)
+			mock.ExpectBegin()
+			mock.ExpectQuery("INSERT").WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), nil, "", "", 0, "", "", nil, 1).WillReturnRows(mock.NewRows([]string{"id"}).AddRow((1)))
+			mock.ExpectQuery("INSERT").WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), nil, "", "", 0, "", "", nil, 1).WillReturnRows(mock.NewRows([]string{"id"}).AddRow((1)))
+			mock.ExpectQuery("INSERT").WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), nil, 1, 1, 1).WillReturnRows(mock.NewRows([]string{"id"}).AddRow((1)))
+			mock.ExpectCommit()
+			err := gamemanagement.AddException(addExceptionTo)
+			Expect(err).ToNot(HaveOccurred())
+		})
+		It("should fail to be added with empty information", func() {
+			addExceptionTo := to.AddExceptionTo{}
+			err := gamemanagement.AddException(addExceptionTo)
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(BeAssignableToTypeOf(validator.ValidationErrors{}))
+			valErr := err.(validator.ValidationErrors)
+			Expect(valErr).To(HaveLen(3))
+		})
+		It("should fail to be added because game does not exist", func() {
+			addExceptionTo := to.AddExceptionTo{NameA: "Max", NameB: "Erika", GameCode: "ABC"}
+			expectDefaultQueryWithNoResult(mock)
+			err := gamemanagement.AddException(addExceptionTo)
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(MatchError(gorm.ErrRecordNotFound))
+		})
+		It("should fail to be added because playerA does not exist", func() {
+			addExceptionTo := to.AddExceptionTo{NameA: "Max", NameB: "Erika", GameCode: "ABC"}
+			expectDefaultQuery(mock)
+			expectDefaultQueryWithNoResult(mock)
+			err := gamemanagement.AddException(addExceptionTo)
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(MatchError(gorm.ErrRecordNotFound))
+		})
+		It("should fail to be added because playerB does not exist", func() {
+			addExceptionTo := to.AddExceptionTo{NameA: "Max", NameB: "Erika", GameCode: "ABC"}
+			expectDefaultQuery(mock)
+			expectDefaultQuery(mock)
+			expectDefaultQueryWithNoResult(mock)
+			err := gamemanagement.AddException(addExceptionTo)
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(MatchError(gorm.ErrRecordNotFound))
+		})
+		It("should fail to be added because PlayerException already exists", func() {
+			addExceptionTo := to.AddExceptionTo{NameA: "Max", NameB: "Erika", GameCode: "ABC"}
+			expectDefaultQuery(mock)
+			expectDefaultQuery(mock)
+			expectDefaultQuery(mock)
+			expectDefaultQuery(mock)
+			err := gamemanagement.AddException(addExceptionTo)
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(MatchError(errors.ErrPlayerExceptionAlreadyExists))
 		})
 	})
 })

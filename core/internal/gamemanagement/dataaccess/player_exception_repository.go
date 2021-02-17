@@ -2,6 +2,7 @@ package dataaccess
 
 import (
 	"github.com/yoktobit/secretsanta/internal/general/dataaccess"
+	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
 
@@ -33,8 +34,11 @@ func (playerExceptionRepository *playerExceptionRepository) CreatePlayerExceptio
 func (playerExceptionRepository *playerExceptionRepository) FindExceptionByIds(playerAId uint, playerBId uint, gameID uint) (PlayerException, error) {
 
 	var existingException PlayerException
-	result := playerExceptionRepository.connection.Connection().First(&existingException, "player_a_id = ? AND player_b_id = ? AND game_id = ?", playerAId, playerBId, gameID)
-	return existingException, result.Error
+	result := playerExceptionRepository.connection.Connection().Where("player_a_id = ? AND player_b_id = ? AND game_id = ?", playerAId, playerBId, gameID).Limit(1).Find(&existingException)
+	if result.RowsAffected == 0 {
+		return existingException, gorm.ErrRecordNotFound
+	}
+	return existingException, nil
 }
 
 // FindExceptionsWithAssociationsByGameID Get existing Exceptions by Game ID including Associations

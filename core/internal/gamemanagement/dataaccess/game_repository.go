@@ -2,6 +2,7 @@ package dataaccess
 
 import (
 	"github.com/yoktobit/secretsanta/internal/general/dataaccess"
+	"gorm.io/gorm"
 )
 
 // GameRepository holds all the database access functions
@@ -32,7 +33,10 @@ func (gameRepository *gameRepository) CreateGame(c dataaccess.Connection, game *
 func (gameRepository *gameRepository) FindGameByCode(code string) (Game, error) {
 
 	var game Game
-	result := gameRepository.connection.Connection().First(&game, "code = ?", code)
+	result := gameRepository.connection.Connection().Where("code = ?", code).Limit(1).Find(&game)
+	if result.RowsAffected == 0 {
+		return game, gorm.ErrRecordNotFound
+	}
 	return game, result.Error
 }
 
