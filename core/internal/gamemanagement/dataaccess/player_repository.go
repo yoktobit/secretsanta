@@ -12,7 +12,7 @@ type PlayerRepository interface {
 	UpdatePlayer(c dataaccess.Connection, player *Player)
 	DeletePlayerByNameAndGameID(c dataaccess.Connection, playerName string, gameID uint)
 	FindPlayerByNameAndGameID(name string, gameID uint) (Player, error)
-	FindPlayerWithAssociationsByNameAndGameID(playerName string, gameID uint) Player
+	FindPlayerWithAssociationsByNameAndGameID(playerName string, gameID uint) (Player, error)
 	FindFirstUnreadyPlayerByGameID(gameID uint) (Player, error)
 	FindPlayersByGameID(gameID uint) []*Player
 }
@@ -51,11 +51,14 @@ func (playerRepository *playerRepository) FindPlayerByNameAndGameID(name string,
 }
 
 // FindPlayerWithAssociationsByNameAndGameID Get a Player By Name and Game ID including Associations
-func (playerRepository *playerRepository) FindPlayerWithAssociationsByNameAndGameID(playerName string, gameID uint) Player {
+func (playerRepository *playerRepository) FindPlayerWithAssociationsByNameAndGameID(playerName string, gameID uint) (Player, error) {
 
 	var player Player
-	playerRepository.connection.Connection().Preload(clause.Associations).First(&player, "name = ? AND game_id = ?", playerName, gameID)
-	return player
+	result := playerRepository.connection.Connection().Preload(clause.Associations).Where("name = ? AND game_id = ?", playerName, gameID).Limit(1).Find(&player)
+	if result.RowsAffected == 0 {
+		return player, gorm.ErrRecordNotFound
+	}
+	return player, result.Error
 }
 
 // FindPlayersByGameID Get all Players by Game ID

@@ -102,6 +102,99 @@ Key: 'CreateGameTo.AdminPassword' Error:Field validation for 'AdminPassword' fai
 			Expect(valErr.Error()).To(BeIdenticalTo(`Key: 'CreateGameTo.AdminPassword' Error:Field validation for 'AdminPassword' failed on the 'required' tag`))
 			Expect(createGameResponse).To(BeIdenticalTo(to.CreateGameResponseTo{}))
 		})
+		It("should be found by code", func() {
+
+			code, title, description := "ABC", "GameTitle", "GameDescription"
+			mock.ExpectQuery("SELECT").WithArgs(code).WillReturnRows(sqlmock.NewRows([]string{"code", "title", "description"}).AddRow(code, title, description))
+			expectedGetBasicGameResponseTo := to.GetBasicGameResponseTo{Code: code, Title: title, Description: description}
+
+			getBasicGameResponseTo, err := gamemanagement.GetBasicGameByCode(code)
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(getBasicGameResponseTo).To(BeIdenticalTo(expectedGetBasicGameResponseTo))
+		})
+		It("should not be found with empty code", func() {
+
+			getBasicGameResponseTo, err := gamemanagement.GetBasicGameByCode("")
+
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(MatchError("Code must not be empty"))
+			Expect(getBasicGameResponseTo).To(BeIdenticalTo(to.GetBasicGameResponseTo{}))
+		})
+		It("should not be found if game does not exist", func() {
+
+			code := "anyCode"
+			mock.ExpectQuery("SELECT").WithArgs(code).WillReturnRows(sqlmock.NewRows([]string{"code", "title", "description"}))
+
+			getBasicGameResponseTo, err := gamemanagement.GetBasicGameByCode(code)
+
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(MatchError(gorm.ErrRecordNotFound))
+			Expect(getBasicGameResponseTo).To(BeIdenticalTo(to.GetBasicGameResponseTo{}))
+		})
+		It("should be found as full game with valid information", func() {
+
+			code, title, description, playerName, gifted := "ABC", "GameTitle", "GameDescription", "Max", ""
+			mock.ExpectQuery("SELECT").WithArgs(code).WillReturnRows(sqlmock.NewRows([]string{"id", "code", "title", "description", "status"}).AddRow(1, code, title, description, da.StatusCreated.String()))
+			//mock.ExpectQuery("SELECT SOMETHING").WithArgs(1, "Max").WillReturnRows(sqlmock.NewRows([]string{"gifted"}).AddRow(gifted))
+			expectedFullGameResponseTo := to.GetFullGameResponseTo{Code: code, Title: title, Description: description, Status: da.StatusCreated.String(), Gifted: gifted}
+
+			getFullGameResponseTo, err := gamemanagement.GetFullGameByCode(code, playerName)
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(getFullGameResponseTo).To(BeIdenticalTo(expectedFullGameResponseTo))
+		})
+		It("should be found as full game with gifted player in drawn game with valid information", func() {
+
+			code, title, description, playerName, gifted := "ABC", "GameTitle", "GameDescription", "Max", "Moritz"
+			mock.ExpectQuery("SELECT").WithArgs(code).WillReturnRows(sqlmock.NewRows([]string{"id", "code", "title", "description", "status"}).AddRow(1, code, title, description, da.StatusDrawn.String()))
+			mock.ExpectQuery("SELECT").WithArgs(playerName, 1).WillReturnRows(sqlmock.NewRows([]string{"id", "name", "gifted_id"}).AddRow(2, playerName, 3))
+			mock.ExpectQuery("SELECT").WithArgs(3).WillReturnRows(sqlmock.NewRows([]string{"id", "name"}).AddRow(3, gifted))
+			expectedFullGameResponseTo := to.GetFullGameResponseTo{Code: code, Title: title, Description: description, Status: da.StatusDrawn.String(), Gifted: gifted}
+
+			getFullGameResponseTo, err := gamemanagement.GetFullGameByCode(code, playerName)
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(getFullGameResponseTo).To(BeIdenticalTo(expectedFullGameResponseTo))
+		})
+		It("should not be found as full game with empty game code", func() {
+
+			getFullGameResponseTo, err := gamemanagement.GetFullGameByCode("", "Max")
+
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(MatchError("Code must not be empty"))
+			Expect(getFullGameResponseTo).To(BeIdenticalTo(to.GetFullGameResponseTo{}))
+		})
+		It("should not be found as full game with empty playerName", func() {
+
+			getFullGameResponseTo, err := gamemanagement.GetFullGameByCode("ABC", "")
+
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(MatchError("playerName must not be empty"))
+			Expect(getFullGameResponseTo).To(BeIdenticalTo(to.GetFullGameResponseTo{}))
+		})
+		It("should not be found as full game if game does not exist", func() {
+
+			code := "ABC"
+			mock.ExpectQuery("SELECT").WithArgs(code).WillReturnRows(sqlmock.NewRows([]string{"id", "code", "title", "description", "status"}))
+			getFullGameResponseTo, err := gamemanagement.GetFullGameByCode(code, "Max")
+
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(MatchError(gorm.ErrRecordNotFound))
+			Expect(getFullGameResponseTo).To(BeIdenticalTo(to.GetFullGameResponseTo{}))
+		})
+		It("should not be found as full game if player does not exist", func() {
+
+			code, title, description, playerName := "ABC", "GameTitle", "GameDescription", "Max"
+			mock.ExpectQuery("SELECT").WithArgs(code).WillReturnRows(sqlmock.NewRows([]string{"id", "code", "title", "description", "status"}).AddRow(1, code, title, description, da.StatusDrawn.String()))
+			mock.ExpectQuery("SELECT").WithArgs(playerName, 1).WillReturnRows(sqlmock.NewRows([]string{"id", "name", "gifted_id"}))
+
+			getFullGameResponseTo, err := gamemanagement.GetFullGameByCode(code, playerName)
+
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(MatchError("Player not found"))
+			Expect(getFullGameResponseTo).To(BeIdenticalTo(to.GetFullGameResponseTo{}))
+		})
 	})
 	Context("Player", func() {
 		It("can be added to a game with valid information", func() {

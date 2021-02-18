@@ -1,6 +1,7 @@
 package logic
 
 import (
+	"errors"
 	"math/rand"
 	"time"
 
@@ -23,8 +24,8 @@ type Gamemanagement interface {
 	RemovePlayerFromGame(removePlayerTo to.AddRemovePlayerTo) error
 	RegisterPlayerPassword(registerPlayerPasswordTo to.RegisterLoginPlayerPasswordTo) error
 	AddException(addExceptionTo to.AddExceptionTo) error
-	GetBasicGameByCode(code string) to.GetBasicGameResponseTo
-	GetFullGameByCode(code string, playerName string) to.GetFullGameResponseTo
+	GetBasicGameByCode(code string) (to.GetBasicGameResponseTo, error)
+	GetFullGameByCode(code string, playerName string) (to.GetFullGameResponseTo, error)
 	GetPlayersByCode(code string) []to.PlayerResponseTo
 	GetPlayerRoleByCodeAndName(code string, name string) string
 	GetExceptionsByCode(code string) []to.ExceptionResponseTo
@@ -169,21 +170,40 @@ func (gamemanagement *gamemanagement) AddException(addExceptionTo to.AddExceptio
 }
 
 // GetBasicGameByCode fetches the game from the DB
-func (gamemanagement *gamemanagement) GetBasicGameByCode(code string) to.GetBasicGameResponseTo {
-	game, _ := gamemanagement.gameRepository.FindGameByCode(code)
+func (gamemanagement *gamemanagement) GetBasicGameByCode(code string) (to.GetBasicGameResponseTo, error) {
+
+	if code == "" {
+		return to.GetBasicGameResponseTo{}, errors.New("Code must not be empty")
+	}
+	game, err := gamemanagement.gameRepository.FindGameByCode(code)
+	if err != nil {
+		return to.GetBasicGameResponseTo{}, err
+	}
 	gameResponseTo := to.GetBasicGameResponseTo{Title: game.Title, Description: game.Description, Code: game.Code}
-	return gameResponseTo
+	return gameResponseTo, nil
 }
 
 // GetFullGameByCode fetches the game from the DB
-func (gamemanagement *gamemanagement) GetFullGameByCode(code string, playerName string) to.GetFullGameResponseTo {
-	game, _ := gamemanagement.gameRepository.FindGameByCode(code)
+func (gamemanagement *gamemanagement) GetFullGameByCode(code string, playerName string) (to.GetFullGameResponseTo, error) {
+	if code == "" {
+		return to.GetFullGameResponseTo{}, errors.New("Code must not be empty")
+	}
+	if playerName == "" {
+		return to.GetFullGameResponseTo{}, errors.New("playerName must not be empty")
+	}
+	game, err := gamemanagement.gameRepository.FindGameByCode(code)
+	if err != nil {
+		return to.GetFullGameResponseTo{}, err
+	}
 	gameResponseTo := to.GetFullGameResponseTo{Title: game.Title, Description: game.Description, Status: game.Status, Code: game.Code}
 	if game.Status == dataaccess.StatusDrawn.String() {
-		player := gamemanagement.playerRepository.FindPlayerWithAssociationsByNameAndGameID(playerName, game.ID)
+		player, err := gamemanagement.playerRepository.FindPlayerWithAssociationsByNameAndGameID(playerName, game.ID)
+		if err != nil {
+			return to.GetFullGameResponseTo{}, errors.New("Player not found")
+		}
 		gameResponseTo.Gifted = player.Gifted.Name
 	}
-	return gameResponseTo
+	return gameResponseTo, nil
 }
 
 // GetPlayersByCode fetches the players of a game from the DB
