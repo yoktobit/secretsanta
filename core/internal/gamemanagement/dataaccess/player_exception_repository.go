@@ -11,7 +11,7 @@ type PlayerExceptionRepository interface {
 	CreatePlayerException(c dataaccess.Connection, playerException *PlayerException)
 	DeleteExceptionByPlayerID(c dataaccess.Connection, playerID uint)
 	FindExceptionByIds(playerAId uint, playerBId uint, gameID uint) (PlayerException, error)
-	FindExceptionsWithAssociationsByGameID(gameID uint) []*PlayerException
+	FindExceptionsWithAssociationsByGameID(gameID uint) ([]*PlayerException, error)
 }
 
 type playerExceptionRepository struct {
@@ -42,11 +42,11 @@ func (playerExceptionRepository *playerExceptionRepository) FindExceptionByIds(p
 }
 
 // FindExceptionsWithAssociationsByGameID Get existing Exceptions by Game ID including Associations
-func (playerExceptionRepository *playerExceptionRepository) FindExceptionsWithAssociationsByGameID(gameID uint) []*PlayerException {
+func (playerExceptionRepository *playerExceptionRepository) FindExceptionsWithAssociationsByGameID(gameID uint) ([]*PlayerException, error) {
 
 	var playerExceptions []*PlayerException
-	playerExceptionRepository.connection.Connection().Where("game_id = ?", gameID).Preload(clause.Associations).Find(&playerExceptions)
-	return playerExceptions
+	result := playerExceptionRepository.connection.Connection().Where("game_id = ?", gameID).Preload(clause.Associations).Find(&playerExceptions)
+	return playerExceptions, result.Error
 }
 
 // DeleteExceptionByPlayerID deletes the game by the IDs of Player A and Player B

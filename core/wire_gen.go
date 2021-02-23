@@ -7,9 +7,10 @@ package main
 
 import (
 	dataaccess2 "github.com/yoktobit/secretsanta/internal/gamemanagement/dataaccess"
-	"github.com/yoktobit/secretsanta/internal/gamemanagement/logic"
+	logic2 "github.com/yoktobit/secretsanta/internal/gamemanagement/logic"
 	"github.com/yoktobit/secretsanta/internal/gamemanagement/service"
 	"github.com/yoktobit/secretsanta/internal/general/dataaccess"
+	"github.com/yoktobit/secretsanta/internal/general/logic"
 )
 
 // Injectors from wire.go:
@@ -20,7 +21,8 @@ func InitializeEvent() service.RestService {
 	gameRepository := dataaccess2.NewGameRepository(connection)
 	playerRepository := dataaccess2.NewPlayerRepository(connection)
 	playerExceptionRepository := dataaccess2.NewPlayerExceptionRepository(connection)
-	gamemanagement := logic.NewGamemanagement(connection, gameRepository, playerRepository, playerExceptionRepository)
+	randomizer := logic.NewRandomizer()
+	gamemanagement := logic2.NewGamemanagement(connection, gameRepository, playerRepository, playerExceptionRepository, randomizer)
 	restService := service.NewRestService(gamemanagement)
 	return restService
 }

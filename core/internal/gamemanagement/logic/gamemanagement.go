@@ -2,8 +2,6 @@ package logic
 
 import (
 	"errors"
-	"math/rand"
-	"time"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/lithammer/shortuuid"
@@ -11,6 +9,7 @@ import (
 	gerr "github.com/yoktobit/secretsanta/internal/gamemanagement/logic/errors"
 	"github.com/yoktobit/secretsanta/internal/gamemanagement/logic/to"
 	gda "github.com/yoktobit/secretsanta/internal/general/dataaccess"
+	glogic "github.com/yoktobit/secretsanta/internal/general/logic"
 	"golang.org/x/crypto/bcrypt"
 
 	log "github.com/sirupsen/logrus"
@@ -26,12 +25,12 @@ type Gamemanagement interface {
 	AddException(addExceptionTo to.AddExceptionTo) error
 	GetBasicGameByCode(code string) (to.GetBasicGameResponseTo, error)
 	GetFullGameByCode(code string, playerName string) (to.GetFullGameResponseTo, error)
-	GetPlayersByCode(code string) []to.PlayerResponseTo
-	GetPlayerRoleByCodeAndName(code string, name string) string
-	GetExceptionsByCode(code string) []to.ExceptionResponseTo
+	GetPlayersByCode(code string) ([]to.PlayerResponseTo, error)
+	GetPlayerRoleByCodeAndName(code string, name string) (string, error)
+	GetExceptionsByCode(code string) ([]to.ExceptionResponseTo, error)
 	LoginPlayer(loginPlayerPasswordTo to.RegisterLoginPlayerPasswordTo) to.RegisterLoginPlayerPasswordResponseTo
-	DrawGame(drawGameTo to.DrawGameTo) to.DrawGameResponseTo
-	ResetGame(gameCode string)
+	DrawGame(drawGameTo to.DrawGameTo) (to.DrawGameResponseTo, error)
+	ResetGame(gameCode string) error
 }
 
 type gamemanagement struct {
@@ -39,12 +38,13 @@ type gamemanagement struct {
 	gameRepository            dataaccess.GameRepository
 	playerRepository          dataaccess.PlayerRepository
 	playerExceptionRepository dataaccess.PlayerExceptionRepository
+	random                    glogic.Randomizer
 }
 
 // NewGamemanagement is the factory method to create a new Gamemanagement
-func NewGamemanagement(connection gda.Connection, gameRepository dataaccess.GameRepository, playerRepository dataaccess.PlayerRepository, playerExceptionRepository dataaccess.PlayerExceptionRepository) Gamemanagement {
+func NewGamemanagement(connection gda.Connection, gameRepository dataaccess.GameRepository, playerRepository dataaccess.PlayerRepository, playerExceptionRepository dataaccess.PlayerExceptionRepository, random glogic.Randomizer) Gamemanagement {
 
-	return &gamemanagement{connection: connection, gameRepository: gameRepository, playerRepository: playerRepository, playerExceptionRepository: playerExceptionRepository}
+	return &gamemanagement{connection: connection, gameRepository: gameRepository, playerRepository: playerRepository, playerExceptionRepository: playerExceptionRepository, random: random}
 }
 
 // Connection returns the database connection
@@ -207,61 +207,91 @@ func (gamemanagement *gamemanagement) GetFullGameByCode(code string, playerName 
 }
 
 // GetPlayersByCode fetches the players of a game from the DB
-func (gamemanagement *gamemanagement) GetPlayersByCode(code string) []to.PlayerResponseTo {
-	game, _ := gamemanagement.gameRepository.FindGameByCode(code)
-	players := gamemanagement.playerRepository.FindPlayersByGameID(game.ID)
+func (gamemanagement *gamemanagement) GetPlayersByCode(code string) ([]to.PlayerResponseTo, error) {
+	if code == "" {
+		return make([]to.PlayerResponseTo, 0), errors.New("Code must not be empty")
+	}
+	game, err := gamemanagement.gameRepository.FindGameByCode(code)
+	if err != nil {
+		return make([]to.PlayerResponseTo, 0), err
+	}
+	players, err := gamemanagement.playerRepository.FindPlayersByGameID(game.ID)
+	if err != nil {
+		return make([]to.PlayerResponseTo, 0), err
+	}
 	playerResponseTos := make([]to.PlayerResponseTo, 0)
 	for _, player := range players {
 		playerResponseTo := to.PlayerResponseTo{Name: player.Name, Status: player.Status}
 		playerResponseTos = append(playerResponseTos, playerResponseTo)
 	}
-	return playerResponseTos
+	return playerResponseTos, nil
 }
 
 // GetPlayerRoleByCodeAndName fetches the player role in a game from the DB
-func (gamemanagement *gamemanagement) GetPlayerRoleByCodeAndName(code string, name string) string {
-	game, _ := gamemanagement.gameRepository.FindGameByCode(code)
-	player, error := gamemanagement.playerRepository.FindPlayerByNameAndGameID(name, game.ID)
-	if error == nil {
-		log.WithField("role", player.Role).Debug("Rolle gefunden")
-		return player.Role
+func (gamemanagement *gamemanagement) GetPlayerRoleByCodeAndName(code string, name string) (string, error) {
+	if code == "" {
+		return "", errors.New("Code must not be empty")
 	}
-	return ""
+	if name == "" {
+		return "", errors.New("Name must not be empty")
+	}
+	game, err := gamemanagement.gameRepository.FindGameByCode(code)
+	if err != nil {
+		return "", err
+	}
+	player, err := gamemanagement.playerRepository.FindPlayerByNameAndGameID(name, game.ID)
+	if err == nil {
+		log.WithField("role", player.Role).Debug("Rolle gefunden")
+		return player.Role, nil
+	}
+	return "", err
 }
 
 // GetExceptionsByCode returns the draw exceptions in a game
-func (gamemanagement *gamemanagement) GetExceptionsByCode(code string) []to.ExceptionResponseTo {
-	game, _ := gamemanagement.gameRepository.FindGameByCode(code)
-	playerExceptions := gamemanagement.playerExceptionRepository.FindExceptionsWithAssociationsByGameID(game.ID)
+func (gamemanagement *gamemanagement) GetExceptionsByCode(code string) ([]to.ExceptionResponseTo, error) {
 	exceptionResponseTos := make([]to.ExceptionResponseTo, 0)
+	if code == "" {
+		return exceptionResponseTos, errors.New("Code must not be empty")
+	}
+	game, err := gamemanagement.gameRepository.FindGameByCode(code)
+	if err != nil {
+		return exceptionResponseTos, err
+	}
+	playerExceptions, err := gamemanagement.playerExceptionRepository.FindExceptionsWithAssociationsByGameID(game.ID)
+	if err != nil {
+		return exceptionResponseTos, err
+	}
 	for _, playerException := range playerExceptions {
 		exceptionResponseTo := to.ExceptionResponseTo{NameA: playerException.PlayerA.Name, NameB: playerException.PlayerB.Name}
 		exceptionResponseTos = append(exceptionResponseTos, exceptionResponseTo)
 	}
-	return exceptionResponseTos
+	return exceptionResponseTos, err
 }
 
 // LoginPlayer logs in a player
 func (gamemanagement *gamemanagement) LoginPlayer(loginPlayerPasswordTo to.RegisterLoginPlayerPasswordTo) to.RegisterLoginPlayerPasswordResponseTo {
 	var player dataaccess.Player
 	var loginPlayerPasswordResponseTo to.RegisterLoginPlayerPasswordResponseTo
-	game, error := gamemanagement.gameRepository.FindGameByCode(loginPlayerPasswordTo.GameCode)
-	if error != nil {
-		log.WithField("gameCode", loginPlayerPasswordTo.GameCode).Info("Game not found")
+	err := validator.New().Struct(loginPlayerPasswordTo)
+	if err != nil {
 		gamemanagement.writeLoginError(&loginPlayerPasswordResponseTo)
 		return loginPlayerPasswordResponseTo
 	}
-	player, err := gamemanagement.playerRepository.FindPlayerByNameAndGameID(loginPlayerPasswordTo.Name, game.ID)
+	game, err := gamemanagement.gameRepository.FindGameByCode(loginPlayerPasswordTo.GameCode)
 	if err != nil {
-		log.WithFields(log.Fields{"name": loginPlayerPasswordTo.Name, "gameCode": loginPlayerPasswordTo.GameCode}).Info("Player not found")
+		gamemanagement.writeLoginError(&loginPlayerPasswordResponseTo)
+		return loginPlayerPasswordResponseTo
+	}
+	player, err = gamemanagement.playerRepository.FindPlayerByNameAndGameID(loginPlayerPasswordTo.Name, game.ID)
+	if err != nil {
 		gamemanagement.writeLoginError(&loginPlayerPasswordResponseTo)
 		return loginPlayerPasswordResponseTo
 	}
 	if player.Password == "" {
 		gamemanagement.RegisterPlayerPassword(loginPlayerPasswordTo)
 	} else {
-		error := bcrypt.CompareHashAndPassword([]byte(player.Password), []byte(loginPlayerPasswordTo.Password))
-		if error != nil {
+		err = bcrypt.CompareHashAndPassword([]byte(player.Password), []byte(loginPlayerPasswordTo.Password))
+		if err != nil {
 			gamemanagement.writeLoginError(&loginPlayerPasswordResponseTo)
 			return loginPlayerPasswordResponseTo
 		}
@@ -271,20 +301,30 @@ func (gamemanagement *gamemanagement) LoginPlayer(loginPlayerPasswordTo to.Regis
 }
 
 // DrawGame draws the lots
-func (gamemanagement *gamemanagement) DrawGame(drawGameTo to.DrawGameTo) to.DrawGameResponseTo {
-	game, _ := gamemanagement.gameRepository.FindGameByCode(drawGameTo.GameCode)
-	players := gamemanagement.playerRepository.FindPlayersByGameID(game.ID)
-	exceptions := gamemanagement.playerExceptionRepository.FindExceptionsWithAssociationsByGameID(game.ID)
+func (gamemanagement *gamemanagement) DrawGame(drawGameTo to.DrawGameTo) (to.DrawGameResponseTo, error) {
+	if drawGameTo.GameCode == "" {
+		return to.DrawGameResponseTo{}, errors.New("GameCode must not be empty")
+	}
+	game, err := gamemanagement.gameRepository.FindGameByCode(drawGameTo.GameCode)
+	if err != nil {
+		return to.DrawGameResponseTo{}, err
+	}
+	players, err := gamemanagement.playerRepository.FindPlayersByGameID(game.ID)
+	if err != nil {
+		return to.DrawGameResponseTo{}, err
+	}
+	exceptions, err := gamemanagement.playerExceptionRepository.FindExceptionsWithAssociationsByGameID(game.ID)
+	if err != nil {
+		return to.DrawGameResponseTo{}, err
+	}
 	var lots map[*dataaccess.Player]*dataaccess.Player = make(map[*dataaccess.Player]*dataaccess.Player)
-	rndSource := rand.NewSource(time.Now().UnixNano())
-	rnd := rand.New(rndSource)
 	tries := 0
 	ok := false
 	for !ok && tries < 100 {
 		remaining := make([]*dataaccess.Player, len(players))
 		copy(remaining, players)
 		for _, player := range players {
-			randomNumber := rnd.Intn(len(remaining))
+			randomNumber := gamemanagement.random.NextInt(len(remaining))
 			lots[player] = remaining[randomNumber]
 			log.WithFields(log.Fields{"giftee": player.Name, "gifted": lots[player].Name}).Debug("Los")
 			remaining = append(remaining[:randomNumber], remaining[randomNumber+1:]...)
@@ -310,24 +350,31 @@ func (gamemanagement *gamemanagement) DrawGame(drawGameTo to.DrawGameTo) to.Draw
 		drawGameResponseTo.Message = "Nach 100 Versuchen wurde kein plausibles Ergebnis gefunden. Bitte nochmal versuchen oder weniger Ausnahmen definieren."
 	}
 	drawGameResponseTo.Ok = ok
-	return drawGameResponseTo
+	return drawGameResponseTo, nil
 }
 
 // ResetGame resets a game
-func (gamemanagement *gamemanagement) ResetGame(gameCode string) {
-	game, _ := gamemanagement.gameRepository.FindGameByCode(gameCode)
+func (gamemanagement *gamemanagement) ResetGame(code string) error {
+	if code == "" {
+		return errors.New("Code must not be empty")
+	}
+	game, err := gamemanagement.gameRepository.FindGameByCode(code)
+	if err != nil {
+		return err
+	}
 	game.Status = dataaccess.StatusReady.String()
 	gamemanagement.Connection().NewTransaction(func(c gda.Connection) error {
 		gamemanagement.gameRepository.UpdateGame(c, &game)
 		return nil
 	})
+	return nil
 }
 
 func (gamemanagement *gamemanagement) saveLots(c gda.Connection, lots map[*dataaccess.Player]*dataaccess.Player) {
 
 	for giftee, gifted := range lots {
 
-		giftee.Gifted = gifted
+		giftee.GiftedID = &gifted.ID
 		gamemanagement.playerRepository.UpdatePlayer(c, giftee)
 	}
 }
@@ -366,17 +413,19 @@ func (gamemanagement *gamemanagement) generateCode() string {
 
 func (gamemanagement *gamemanagement) generatePassword(plainPassword string) string {
 	plainPasswordByte := []byte(plainPassword)
-	hash, err := bcrypt.GenerateFromPassword(plainPasswordByte, bcrypt.DefaultCost)
-	if err != nil {
-		log.Fatal("Fehler beim Hashen", err)
-	}
+	// I see no way how this may fail in real life
+	hash, _ := bcrypt.GenerateFromPassword(plainPasswordByte, bcrypt.DefaultCost)
 	return string(hash)
 }
 
-func (gamemanagement *gamemanagement) refreshGameStatus(c gda.Connection, game *dataaccess.Game) {
-	_, error := gamemanagement.playerRepository.FindFirstUnreadyPlayerByGameID(game.ID)
-	if error != nil {
+func (gamemanagement *gamemanagement) refreshGameStatus(c gda.Connection, game *dataaccess.Game) error {
+	_, exists, err := gamemanagement.playerRepository.FindFirstUnreadyPlayerByGameID(game.ID)
+	if err != nil {
+		return err
+	}
+	if !exists {
 		game.Status = dataaccess.StatusReady.String()
 		gamemanagement.gameRepository.UpdateGame(c, game)
 	}
+	return err
 }

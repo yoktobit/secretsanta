@@ -13,8 +13,8 @@ type PlayerRepository interface {
 	DeletePlayerByNameAndGameID(c dataaccess.Connection, playerName string, gameID uint)
 	FindPlayerByNameAndGameID(name string, gameID uint) (Player, error)
 	FindPlayerWithAssociationsByNameAndGameID(playerName string, gameID uint) (Player, error)
-	FindFirstUnreadyPlayerByGameID(gameID uint) (Player, error)
-	FindPlayersByGameID(gameID uint) []*Player
+	FindFirstUnreadyPlayerByGameID(gameID uint) (Player, bool, error)
+	FindPlayersByGameID(gameID uint) ([]*Player, error)
 }
 
 type playerRepository struct {
@@ -62,19 +62,26 @@ func (playerRepository *playerRepository) FindPlayerWithAssociationsByNameAndGam
 }
 
 // FindPlayersByGameID Get all Players by Game ID
-func (playerRepository *playerRepository) FindPlayersByGameID(gameID uint) []*Player {
+func (playerRepository *playerRepository) FindPlayersByGameID(gameID uint) ([]*Player, error) {
 
 	var players []*Player
-	playerRepository.connection.Connection().Where("game_id = ?", gameID).Find(&players)
-	return players
+	result := playerRepository.connection.Connection().Where("game_id = ?", gameID).Find(&players)
+	if result.Error != nil {
+		return make([]*Player, 0), result.Error
+	}
+	return players, nil
 }
 
 // FindFirstUnreadyPlayerByGameID Get the first unready Player for a GameId
-func (playerRepository *playerRepository) FindFirstUnreadyPlayerByGameID(gameID uint) (Player, error) {
+func (playerRepository *playerRepository) FindFirstUnreadyPlayerByGameID(gameID uint) (Player, bool, error) {
 
 	var otherPlayer Player
-	result := playerRepository.connection.Connection().First(&otherPlayer, "game_id = ? AND status != ?", gameID, StatusReady.String())
-	return otherPlayer, result.Error
+	result := playerRepository.connection.Connection().Where("game_id = ? AND status != ?", gameID, StatusReady.String()).Limit(1).Find(&otherPlayer)
+	exists := false
+	if result.RowsAffected > 0 {
+		exists = true
+	}
+	return otherPlayer, exists, result.Error
 }
 
 // DeletePlayerByNameAndGameID deletes a player by name and game ID

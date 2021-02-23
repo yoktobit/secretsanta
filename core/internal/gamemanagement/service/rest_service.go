@@ -5,6 +5,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	log "github.com/sirupsen/logrus"
+	"gorm.io/gorm"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
@@ -114,7 +115,11 @@ func (restService *restService) DefineRoutes(r *gin.RouterGroup) {
 			return
 		}
 		drawGameTo := to.DrawGameTo{GameCode: gameCode.(string)}
-		drawGameResponseTo := restService.gamemanagement.DrawGame(drawGameTo)
+		drawGameResponseTo, err := restService.gamemanagement.DrawGame(drawGameTo)
+		if err != nil {
+			c.Status(http.StatusInternalServerError)
+			return
+		}
 		c.JSON(http.StatusOK, drawGameResponseTo)
 	})
 	r.GET("/reset", func(c *gin.Context) {
@@ -129,7 +134,15 @@ func (restService *restService) DefineRoutes(r *gin.RouterGroup) {
 	})
 	r.GET("/game/:gameCode", func(c *gin.Context) {
 		gameCode := c.Param("gameCode")
-		gameResultTo := restService.gamemanagement.GetBasicGameByCode(gameCode)
+		gameResultTo, err := restService.gamemanagement.GetBasicGameByCode(gameCode)
+		if err == gorm.ErrRecordNotFound {
+			c.Status(http.StatusNotFound)
+			return
+		}
+		if err != nil {
+			c.Status(http.StatusInternalServerError)
+			return
+		}
 		c.JSON(http.StatusOK, gameResultTo)
 	})
 	r.GET("/game", func(c *gin.Context) {
@@ -145,7 +158,15 @@ func (restService *restService) DefineRoutes(r *gin.RouterGroup) {
 			c.Status(http.StatusForbidden)
 			return
 		}
-		gameResultTo := restService.gamemanagement.GetFullGameByCode(gameCode.(string), player.(string))
+		gameResultTo, err := restService.gamemanagement.GetFullGameByCode(gameCode.(string), player.(string))
+		if err == gorm.ErrRecordNotFound {
+			c.Status(http.StatusNotFound)
+			return
+		}
+		if err != nil {
+			c.Status(http.StatusInternalServerError)
+			return
+		}
 		c.JSON(http.StatusOK, gameResultTo)
 	})
 	r.GET("/players", func(c *gin.Context) {
@@ -155,7 +176,11 @@ func (restService *restService) DefineRoutes(r *gin.RouterGroup) {
 			c.Status(http.StatusForbidden)
 			return
 		}
-		playerResultTos := restService.gamemanagement.GetPlayersByCode(gameCode.(string))
+		playerResultTos, err := restService.gamemanagement.GetPlayersByCode(gameCode.(string))
+		if err != nil {
+			c.Status(http.StatusInternalServerError)
+			return
+		}
 		c.JSON(http.StatusOK, playerResultTos)
 	})
 	r.GET("/exceptions", func(c *gin.Context) {
@@ -165,7 +190,11 @@ func (restService *restService) DefineRoutes(r *gin.RouterGroup) {
 			c.Status(http.StatusForbidden)
 			return
 		}
-		exceptionResponseTos := restService.gamemanagement.GetExceptionsByCode(gameCode.(string))
+		exceptionResponseTos, err := restService.gamemanagement.GetExceptionsByCode(gameCode.(string))
+		if err != nil {
+			c.Status(http.StatusInternalServerError)
+			return
+		}
 		c.JSON(http.StatusOK, exceptionResponseTos)
 	})
 	r.GET("/logout", func(c *gin.Context) {
@@ -188,7 +217,12 @@ func (restService *restService) DefineRoutes(r *gin.RouterGroup) {
 			result.GameCode = gameCode.(string)
 		}
 		if player != nil && gameCode != nil {
-			result.Role = restService.gamemanagement.GetPlayerRoleByCodeAndName(gameCode.(string), player.(string))
+			var err error
+			result.Role, err = restService.gamemanagement.GetPlayerRoleByCodeAndName(gameCode.(string), player.(string))
+			if err != nil {
+				c.Status(http.StatusInternalServerError)
+				return
+			}
 		}
 		c.JSON(http.StatusOK, result)
 	})
