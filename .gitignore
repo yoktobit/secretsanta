@@ -119,3 +119,4 @@ dist
 # Dependency directories (remove the comment below to include it)
 # vendor/
 *.coverprofile
+.vscode/launch.json
