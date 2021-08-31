@@ -220,6 +220,7 @@ func (restService *restService) DefineRoutes(r *gin.RouterGroup) {
 			var err error
 			result.Role, err = restService.gamemanagement.GetPlayerRoleByCodeAndName(gameCode.(string), player.(string))
 			if err != nil {
+				log.Error(err)
 				c.Status(http.StatusInternalServerError)
 				return
 			}
