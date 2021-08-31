@@ -67,6 +67,7 @@ func (gamemanagement *gamemanagement) CreateNewGame(createGameTo to.CreateGameTo
 		gamemanagement.gameRepository.CreateGame(c, &game)
 		player := dataaccess.Player{Name: createGameTo.AdminUser, Password: hashedPassword, GameID: game.ID, Role: dataaccess.RoleAdmin.String(), Status: dataaccess.StatusReady.String()}
 		gamemanagement.playerRepository.CreatePlayer(c, &player)
+		c.Connection().Commit()
 		return nil
 	})
 	result := to.CreateGameResponseTo{Code: code}
