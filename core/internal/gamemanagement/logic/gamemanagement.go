@@ -44,6 +44,7 @@ type gamemanagement struct {
 // NewGamemanagement is the factory method to create a new Gamemanagement
 func NewGamemanagement(connection gda.Connection, gameRepository dataaccess.GameRepository, playerRepository dataaccess.PlayerRepository, playerExceptionRepository dataaccess.PlayerExceptionRepository, random glogic.Randomizer) Gamemanagement {
 
+	dataaccess.MigrateDb(connection.Connection())
 	return &gamemanagement{connection: connection, gameRepository: gameRepository, playerRepository: playerRepository, playerExceptionRepository: playerExceptionRepository, random: random}
 }
 
