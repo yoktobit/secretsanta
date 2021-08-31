@@ -24,14 +24,15 @@ export class NewGameComponent implements OnInit {
     });
   }
 
-  onSubmit(): void {
+  async onSubmit(): Promise<void> {
 
     let createGameTo = new CreateGameTo(this.newGameForm.value.title, this.newGameForm.value.description, this.newGameForm.value.adminUser, this.newGameForm.value.adminPassword)
-    this.backend.createGame(createGameTo).subscribe(createGameResponseTo  => {
-      this.router.navigate(['/players'], {state: createGameResponseTo});
-    }, error => {
-      console.log(error);
-    })
+    try {
+    let createGameResponseTo = await this.backend.createGame(createGameTo);
+    this.router.navigate(['/players'], {state: createGameResponseTo});
+    } catch (error) {
+      console.error(error);
+    }
   }
 
 }
