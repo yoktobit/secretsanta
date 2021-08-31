@@ -22,6 +22,11 @@ services:
     image: secretsanta/backend:latest
     depends_on: [database]
     environment:
+      DB_USER: "${DB_USER}"
+      DB_PASS: "${DB_PASS}"
+      DB_NAME: "${DB_NAME}"
+      DB_HOST: "${DB_HOST}"
+      DB_PORT: "${DB_PORT}"
       PGSQL_CS: "host=database user=${DB_USER} password=${DB_PASS} dbname=${DB_NAME} port=5432"
       ALLOWED_HOSTS: "${ALLOWED_HOSTS}"
       COOKIE_SECRET: "${COOKIE_SECRET}"
