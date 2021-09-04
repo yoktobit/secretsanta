@@ -8,7 +8,9 @@ services:
     image: secretsanta/reverse-proxy:latest
     depends_on: ["webapp", "backend", "database"]
     networks: [secretsanta]
-    ports: [80:80]
+    ports:
+      - "80:80"
+      - "443:443"
     volumes:
       - /root/certs-data/:/data/letsencrypt/
       - /etc/letsencrypt/:/etc/letsencrypt/
