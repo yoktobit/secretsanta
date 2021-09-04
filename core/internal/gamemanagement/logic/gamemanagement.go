@@ -428,6 +428,9 @@ func (gamemanagement *gamemanagement) generatePassword(plainPassword string) str
 }
 
 func (gamemanagement *gamemanagement) refreshGameStatus(c gda.Connection, game *dataaccess.Game) error {
+	if game.Status == dataaccess.StatusDrawn.String() {
+		return nil
+	}
 	_, exists, err := gamemanagement.playerRepository.FindFirstUnreadyPlayerByGameID(game.ID)
 	if err != nil {
 		return err
