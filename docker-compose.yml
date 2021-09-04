@@ -11,6 +11,7 @@ services:
     ports: [80:80]
     volumes:
       - /root/certs-data/:/data/letsencrypt/
+      - /etc/letsencrypt/:/etc/letsencrypt/
   webapp:
     build: "webapp/"
     restart: always
