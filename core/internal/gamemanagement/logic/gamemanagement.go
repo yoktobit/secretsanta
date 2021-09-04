@@ -134,6 +134,9 @@ func (gamemanagement *gamemanagement) RegisterPlayerPassword(registerPlayerPassw
 	player.Status = dataaccess.StatusReady.String()
 	gamemanagement.Connection().NewTransaction(func(c gda.Connection) error {
 		gamemanagement.playerRepository.UpdatePlayer(c, &player)
+		return nil
+	})
+	gamemanagement.Connection().NewTransaction(func(c gda.Connection) error {
 		gamemanagement.refreshGameStatus(c, &game)
 		return nil
 	})
@@ -226,6 +229,10 @@ func (gamemanagement *gamemanagement) GetPlayersByCode(code string) ([]to.Player
 		playerResponseTo := to.PlayerResponseTo{Name: player.Name, Status: player.Status}
 		playerResponseTos = append(playerResponseTos, playerResponseTo)
 	}
+	gamemanagement.Connection().NewTransaction(func(c gda.Connection) error {
+		gamemanagement.refreshGameStatus(c, &game)
+		return nil
+	})
 	return playerResponseTos, nil
 }
 
