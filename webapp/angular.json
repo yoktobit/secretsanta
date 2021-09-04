@@ -67,7 +67,7 @@
                             ],
                             "serviceWorker": true,
                             "ngswConfigPath": "ngsw-config.json",
-                            "localize": ["de", "en"],
+                            "localize": false,
                             "aot": true
                         },
                         "en": {

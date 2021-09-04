@@ -218,6 +218,7 @@ func (restService *restService) DefineRoutes(r *gin.RouterGroup) {
 		}
 		if player != nil && gameCode != nil {
 			var err error
+			// hier Code ausgeben
 			result.Role, err = restService.gamemanagement.GetPlayerRoleByCodeAndName(gameCode.(string), player.(string))
 			if err != nil {
 				log.Error(err)

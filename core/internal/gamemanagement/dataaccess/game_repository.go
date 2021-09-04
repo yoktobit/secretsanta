@@ -26,7 +26,6 @@ func NewGameRepository(connection dataaccess.Connection) GameRepository {
 func (gameRepository *gameRepository) CreateGame(c dataaccess.Connection, game *Game) {
 
 	c.Connection().Create(game)
-	gameRepository.connection.Connection().Commit()
 }
 
 // FindGameByCode receives a game by code

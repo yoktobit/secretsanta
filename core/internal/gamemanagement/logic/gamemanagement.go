@@ -64,10 +64,10 @@ func (gamemanagement *gamemanagement) CreateNewGame(createGameTo to.CreateGameTo
 	game := dataaccess.Game{Code: code, Title: createGameTo.Title, Description: createGameTo.Description, Status: dataaccess.StatusCreated.String()}
 	hashedPassword := gamemanagement.generatePassword(createGameTo.AdminPassword)
 	gamemanagement.Connection().NewTransaction(func(c gda.Connection) error {
+		// hier Code ausgeben
 		gamemanagement.gameRepository.CreateGame(c, &game)
 		player := dataaccess.Player{Name: createGameTo.AdminUser, Password: hashedPassword, GameID: game.ID, Role: dataaccess.RoleAdmin.String(), Status: dataaccess.StatusReady.String()}
 		gamemanagement.playerRepository.CreatePlayer(c, &player)
-		c.Connection().Commit()
 		return nil
 	})
 	result := to.CreateGameResponseTo{Code: code}
