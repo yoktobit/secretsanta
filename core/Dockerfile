@@ -1,9 +1,12 @@
-FROM golang:latest
+FROM golang:latest AS build
 
-WORKDIR /go/src/secretsanta
+WORKDIR /app
 COPY . .
 
 RUN go get -d -v ./...
-RUN go install -v ./...
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o secretsanta .
 
-CMD ["secretsanta"]
+FROM alpine:latest
+COPY --from=build /app/secretsanta /app/secretsanta
+
+CMD ["/app/secretsanta"]

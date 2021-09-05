@@ -2,7 +2,10 @@ version: "3"
 
 services:
   reverse-proxy:
-    build: 'reverse-proxy/'
+    build: 
+      context: 'reverse-proxy/'
+      args: 
+        ENVIRONMENT: "${ENVIRONMENT}"
     restart: always
     container_name: 'secretsanta_reverse_proxy'
     image: secretsanta/reverse-proxy:latest
@@ -12,8 +15,8 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - /root/certs-data/:/data/letsencrypt/
-      - /etc/letsencrypt/:/etc/letsencrypt/
+      - ${CERTS_DATA_DIR}/:/data/letsencrypt/
+      - ${LETSENCRYPT_DIR}/:/etc/letsencrypt/
   webapp:
     build: "webapp/"
     restart: always

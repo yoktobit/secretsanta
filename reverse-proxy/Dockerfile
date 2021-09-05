@@ -1,3 +1,4 @@
 FROM nginx:latest
 
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+ARG ENVIRONMENT
+COPY nginx.${ENVIRONMENT}.conf /etc/nginx/conf.d/default.conf
